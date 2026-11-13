@@ -260,7 +260,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 13/11/2026 · v16 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 13/11/2026 · v17 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -281,13 +281,24 @@ function syncDryCatalog(){
   /* ລຶບລາຍການໃນລາຍຊື່ທີ່ມາຈາກຂອງແຫ້ງ ແຕ່ຖືກລຶບອອກຈາກຂອງແຫ້ງແລ້ວ */
   state.catalogs.po=cat.filter(c=>!c.did||state.dry.some(d=>d.id===c.did));
 }
-function save(){syncDryCatalog();sortAll();state.savedAt=new Date().toISOString();
+function syncFzCatalog(){
+  if(!state.catalogs||!Array.isArray(state.fz))return;
+  const cat=state.catalogs.fzo=state.catalogs.fzo||[];
+  state.fz.forEach(d=>{
+    if(!d.name)return;
+    let hit=cat.find(c=>c.did===d.id)||cat.find(c=>!c.did&&((d.code&&c.code===d.code)||c.name===d.name));
+    if(hit){hit.did=d.id;hit.code=d.code||hit.code||'';hit.name=d.name;if(d.unit)hit.unit=d.unit;if(d.img)hit.img=d.img}
+    else cat.push({code:d.code||'',name:d.name,unit:d.unit||'',did:d.id,...(d.img?{img:d.img}:{})});
+  });
+  state.catalogs.fzo=cat.filter(c=>!c.did||state.fz.some(d=>d.id===c.did));
+}
+function save(){syncDryCatalog();syncFzCatalog();sortAll();state.savedAt=new Date().toISOString();
   mem=state;
   try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
 }
 let state=load()||seed();
 let sectionsReady=false;
-const ORDER_KEYS=['po','chick','eco'];
+const ORDER_KEYS=['po','chick','eco','fzo'];
 function learnCatalog(sec,r){
   if(!r.name)return;
   const cat=state.catalogs[sec];
@@ -324,11 +335,12 @@ function normalize(){
   if(state.blockKg==null)state.blockKg='12';if(state.unitKg==null)state.unitKg='1';
   if(!Array.isArray(state.dry))state.dry=sd.po.map(r=>({id:uid(),code:r.code,name:r.name,unit:r.unit,qty:'',min:'',upd:''}));
   if(sectionsReady)syncBranches();
-  ORDER_KEYS.forEach(k=>{if(!state[k])state[k]=sd[k];});
+  ORDER_KEYS.forEach(k=>{if(!state[k])state[k]=sd[k]||[];});
   ['poHead','chickHead','ecoHead'].forEach(h=>state[h]={...sd[h],...(state[h]||{})});
+  state.fzoHead={prNo:'MT-FRZ001',prNo2:'',by:state.ecoHead.by||'',date:TODAY,need:'',requestor:state.ecoHead.requestor||'',dest:state.ecoHead.dest||'R&D',tel:state.ecoHead.tel||'',purpose:'',...(state.fzoHead||{})};
   state.catalogs=state.catalogs||{};
   if(!state.catalogs.po)state.catalogs.po=state.catalog||[];
-  ORDER_KEYS.forEach(k=>{state.catalogs[k]=state.catalogs[k]||[];sd[k].forEach(r=>learnCatalog(k,r));state[k].forEach(r=>learnCatalog(k,r))});
+  ORDER_KEYS.forEach(k=>{state.catalogs[k]=state.catalogs[k]||[];(sd[k]||[]).forEach(r=>learnCatalog(k,r));state[k].forEach(r=>learnCatalog(k,r))});
 }
 normalize();
 
@@ -466,8 +478,9 @@ const SECTIONS={
   },
 };
 const ORDERS={
-  po:{head:'poHead',nav:'ສັ່ງເຄື່ອງ',title:'ໃບສັ່ງເຄື່ອງ (Purchase Order)',sub:"R&D NongBon — ເພີ່ມລາຍການທີ່ຕ້ອງການເບີກ ແລ້ວກົດ ດາວໂຫຼດ Excel",kind:'po',unit:'Pack',file:'Purchase-Order'},
+  po:{head:'poHead',nav:'ສັ່ງຂອງແຫ້ງ',title:'ໃບສັ່ງຂອງແຫ້ງ (Purchase Order)',sub:"R&D NongBon — ເພີ່ມລາຍການທີ່ຕ້ອງການເບີກ ແລ້ວກົດ ດາວໂຫຼດ Excel",kind:'po',unit:'Pack',file:'Purchase-Order'},
   chick:{head:'chickHead',nav:'ເຕີມໄກ່',title:'ເຕີມໄກ່ເຂົ້າສະຕ໋ອກ (Purchase Order)',sub:"MOM'S TOUCH (VANGXAY) — ໃບສັ່ງໄກ່ເຂົ້າສະຕ໋ອກ",kind:'po',unit:'unit',file:'PO-Chicken-Stock'},
+  fzo:{head:'fzoHead',nav:'ສັ່ງຂອງແຊ່ແຂງ',title:'ໃບສັ່ງຂອງແຊ່ແຂງ (Purchase Request / PR)',sub:'ໃບຂໍສັ່ງຊື້ຂອງແຊ່ແຂງ — ເລືອກສິນຄ້າຈາກລາຍການ "ຂອງແຊ່ແຂງ" ແລ້ວກົດ ດາວໂຫຼດ Excel (ມີເລກ PR)',kind:'pr',unit:'kg',file:'PR-Frozen'},
   eco:{head:'ecoHead',nav:'ECOLAB',title:'ECOLAB (Purchase Request)',sub:'ໃບຂໍສັ່ງຊື້ສານເຄມີ / ອຸປະກອນລ້າງ ຈາກ ECOLAB',kind:'pr',unit:'pcs',file:'PR-ECOLAB'},
 };
 function orderSection(k){
@@ -557,7 +570,7 @@ function orderHeader(k){
   return `<div class="card panel" style="margin-bottom:14px"><div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${headFields(k).map(f).join('')}</div><datalist id="dl_branch">${state.branches.map(b=>`<option value="${esc(b.name)}"></option>`).join('')}<option value="R&D"></option></datalist></div>`;
 }
 SECTIONS.dry={
-  title:'ສະຕ໋ອກຂອງແຫ້ງ',sub:'ຂອງໃຊ້ / ວັດຖຸດິບແຫ້ງ ຕາມລາຍການໃນໃບສັ່ງເຄື່ອງ — ກົດ + ຮັບ / − ເບີກ ເພື່ອປັບຍອດ, ຕັ້ງ "ຂັ້ນຕ່ຳ" ເພື່ອໃຫ້ແຈ້ງເຕືອນເມື່ອໃກ້ໝົດ',item:'ໄອເທັມຂອງແຫ້ງ',
+  title:'ລາຍການຂອງແຫ້ງ',sub:'ຂອງໃຊ້ / ວັດຖຸດິບແຫ້ງ ຕາມລາຍການໃນໃບສັ່ງເຄື່ອງ — ກົດ + ຮັບ / − ເບີກ ເພື່ອປັບຍອດ, ຕັ້ງ "ຂັ້ນຕ່ຳ" ເພື່ອໃຫ້ແຈ້ງເຕືອນເມື່ອໃກ້ໝົດ',item:'ໄອເທັມຂອງແຫ້ງ',
   fields:[
     {key:'code',label:'Items code (ບາໂຄ້ດ)',type:'text'},
     {key:'name',label:'ຊື່ສິນຄ້າ (Product Name)',type:'text',full:true,req:true},
@@ -618,6 +631,9 @@ function bgBlock(){
   ${state.branches.length?`<div style="font-size:13px;margin-bottom:8px">ເບີກຕາມສາຂາ: ${state.branches.map(b=>esc(b.name)+' <b>'+fmtN(pattySentBy(b.id))+'</b>').join(' · ')} <span style="color:var(--muted)">(ໃສ່ທີ່ໜ້າ "ສົ່ງສາຂາ" ຊ່ອງ 🍔 Bulgogi)</span></div>`:''}
   ${rows.length?`<div style="overflow-x:auto"><table><thead><tr><th>ວັນທີ່</th><th style="text-align:right">ນ້ຳໜັກລວມ kg</th><th style="text-align:right">ຄາດໄດ້</th><th style="text-align:right">ໄດ້ຈິງ</th><th></th></tr></thead><tbody>${rows.slice(-8).reverse().map(r=>`<tr><td>${fmtDate(r.date)}</td><td class="num" style="text-align:right">${fmtN(nz(r.tot))}</td><td class="num" style="text-align:right">${fmtN(nz(r.est))}</td><td class="num" style="text-align:right">${r.patty===''||r.patty==null?'–':fmtN(nz(r.patty))}</td><td><button class="btn" data-pset="${r.id}" style="padding:4px 10px">ໃສ່ຈຳນວນຈິງ</button></td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--muted)">ຍັງບໍ່ມີການລະລາຍ Bulgogi</div>'}</div>`;
 }
+function bstockView(){
+  return `<div class="page-h"><h1 style="margin:0 0 4px">ສະຕ໋ອກແຊ່ແຂງ Bulgogi</h1><p style="margin:0 0 14px;color:var(--muted)">ເນື້ອ / ໄອເທັມແຊ່ແຂງທີ່ໃຊ້ເຮັດ Bulgogi ແລະ ຍອດ Bulgogi patty — ແຍກຈາກສະຕ໋ອກໃຫຍ່ (ໄກ່). ເມື່ອບັນທຶກ "ຜະລິດ Bulgogi" ລະບົບຕັດສະຕ໋ອກຈາກທີ່ນີ້ອັດຕະໂນມັດ</p></div>`+fzPanel()+bgBlock();
+}
 function bigSummary(){
   const onH=stockOnHand(),left=bigLeft();
   const k=(l,v,u,s,c)=>`<div class="card kpi"><div class="l"><i style="background:var(${c})"></i>${l}</div><div class="v num" ${v<0?'style="color:var(--bad)"':''}>${fmtN(v)}<small>${u}</small></div><div class="s num">${s}</div></div>`;
@@ -669,7 +685,7 @@ function bigOrdersList(){
 }
 SECTIONS.big={
   title:'ສະຕ໋ອກໃຫຍ່ (ສູນກາງ) — ເນື້ອໄກ່ແຊ່ແຂງ',sub:'ບັນທຶກການຮັບເຂົ້າສະຕ໋ອກໃຫຍ່ — ເມື່ອກົດ "ສັ່ງແລ້ວ" ໃນໜ້າ "ເຕີມໄກ່" ລະບົບຈະຕັດຍອດນີ້ຕາມຈຳນວນອໍເດີໃຫ້ອັດຕະໂນມັດ (ຕິດລົບ = ປັບຫຼຸດ)',item:'ການຮັບເຂົ້າສະຕ໋ອກໃຫຍ່',
-  extra:()=>bigOrderTab()+bigSummary()+fzPanel()+bgBlock()+bigOrdersList(),
+  extra:()=>bigOrderTab()+bigSummary()+bigOrdersList(),
   fields:[
     D('date','ວັນທີ່ຮັບເຂົ້າ',{req:true,def:()=>TODAY}),
     N('qty','ຈຳນວນແກັດ / ກ່ອງ',{req:true,formula:true,autoNote:'ນັບເປັນກ່ອງ (1 ກ່ອງ = 12 kg) — ໃສ່ຕິດລົບ ເຊັ່ນ -5 ເພື່ອປັບຫຼຸດຍອດ'}),
@@ -744,7 +760,7 @@ function stockMoves(){
 
 /* ============ navigation ============ */
 SECTIONS.fz={
-  title:'ໄອເທັມແຊ່ແຂງ',sub:'ລາຍການຂອງແຊ່ແຂງທີ່ໃຊ້ສັ່ງ ແລະ ເກັບສະຕ໋ອກ (ສະແດງຍອດໃນໜ້າສະຕ໋ອກໃຫຍ່, ບໍ່ລວມຍອດໄກ່) — ເມື່ອ "ລະລາຍ Bulgogi" ຍອດຈະຖືກຕັດຈາກທີ່ນີ້ — ກົດ + ຮັບ / − ເບີກ ເພື່ອປັບຍອດ, ຕັ້ງ "ຂັ້ນຕ່ຳ" ເພື່ອໃຫ້ແຈ້ງເຕືອນເມື່ອໃກ້ໝົດ',item:'ໄອເທັມຂອງແຊ່ແຂງ',
+  title:'ຂອງແຊ່ແຂງ',sub:'ລາຍການຂອງແຊ່ແຂງທີ່ໃຊ້ສັ່ງ (ອອກ PR ທີ່ໜ້າ "ສັ່ງຂອງແຊ່ແຂງ") ແລະ ເກັບສະຕ໋ອກ (ສະແດງຍອດໃນໜ້າ "ສະຕ໋ອກ Bulgogi") — ເມື່ອ "ລະລາຍ Bulgogi" ຍອດຈະຖືກຕັດຈາກທີ່ນີ້ — ກົດ + ຮັບ / − ເບີກ ເພື່ອປັບຍອດ, ຕັ້ງ "ຂັ້ນຕ່ຳ" ເພື່ອໃຫ້ແຈ້ງເຕືອນເມື່ອໃກ້ໝົດ',item:'ໄອເທັມຂອງແຊ່ແຂງ',
   fields:[
     {key:'code',label:'Items code (ບາໂຄ້ດ)',type:'text'},
     {key:'name',label:'ຊື່ສິນຄ້າ (Product Name)',type:'text',full:true,req:true},
@@ -872,11 +888,13 @@ const NAV=[
   ['thaw','ລະລາຍ','<path d="M12 2v20M5 6l14 12M19 6L5 18"/>'],
   ['bthaw','ຜະລິດ Bulgogi','<path d="M12 3c3 4 6 6 6 10a6 6 0 0 1-12 0c0-4 3-6 6-10zM9 14a3 3 0 0 0 3 3"/>'],
   ['prod','ຜະລິດ','<path d="M4 20h16M6 20V10l6-5 6 5v10M10 20v-5h4v5"/>'],
-  ['dry','ຂອງແຫ້ງ','<path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6"/>'],
-  ['fz','ແຊ່ແຂງອື່ນໆ','<path d="M12 2v20M4.5 7l15 10M19.5 7l-15 10M9 3.5l3 2 3-2M9 20.5l3-2 3 2"/>'],
+  ['dry','ລາຍການຂອງແຫ້ງ','<path d="M4 7h16v13H4zM8 7V4h8v3M9 12h6"/>'],
+  ['fz','ຂອງແຊ່ແຂງ','<path d="M12 2v20M4.5 7l15 10M19.5 7l-15 10M9 3.5l3 2 3-2M9 20.5l3-2 3 2"/>'],
+  ['bstock','ສະຕ໋ອກ Bulgogi','<path d="M12 3c3 4 6 6 6 10a6 6 0 0 1-12 0c0-4 3-6 6-10z"/><path d="M3 21h18"/>'],
   ['big','ສະຕ໋ອກໃຫຍ່','<path d="M3 21V8l9-5 9 5v13M7 21v-8h10v8M12 13v8"/>'],
   ['stock','ຮັບເຄື່ອງ','<path d="M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/>'],
-  ['po','ສັ່ງເຄື່ອງ','<path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/>'],
+  ['po','ສັ່ງຂອງແຫ້ງ','<path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/>'],
+  ['fzo','ສັ່ງຂອງແຊ່ແຂງ','<path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM12 7v8M9 8l6 6M15 8l-6 6"/>'],
   ['chick','ເຕີມໄກ່','<path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/>'],
   ['report','ລາຍງານ','<path d="M5 3h14v18H5zM9 8h6M9 12h6M9 16h3"/>'],
   ['eco','ECOLAB','<path d="M9 3h6M10 3v5l-5 10a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-10V3"/>'],
@@ -889,7 +907,7 @@ function renderNav(){
 }
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){go(b.dataset.v)}});
 function go(v){view=v;query='';try{location.hash=v}catch(e){}render();window.scrollTo(0,0)}
-window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v&&v!==view&&(v==='home'||v==='report'||SECTIONS[v])){view=v;query='';render()}});
+window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v&&v!==view&&(v==='home'||v==='report'||v==='bstock'||SECTIONS[v])){view=v;query='';render()}});
 
 
 /* ============ ລາຍງານ (ອາທິດ / ເດືອນ / ໄຕມາດ) ============ */
@@ -1037,7 +1055,7 @@ function dashboard(){
     al.push({lv:n.i===0?'bad':n.i===1?'warn':'ok',
       t:n.i===0?`ມື້ນີ້ (${n.day}) ຕ້ອງ${S.name}`:`ອີກ ${n.i} ວັນ (${n.day} ${fmtDate(n.iso)}) ຕ້ອງ${S.name}`,
       lines:[`ກຳນົດ${S.rule}`,k==='chick'?(hasStock?`ສະຕ໋ອກໄກ່ດິບເຫຼືອ ${fmtN(onH)} ແກັດ (ຮັບເຂົ້າ − ລະລາຍ)`:'ຍັງບໍ່ມີຂໍ້ມູນສະຕ໋ອກ'):`ລາຍການໃນໃບສັ່ງ ${state.po.length} ລາຍການ`,'ກົດເພື່ອໄປໜ້າສັ່ງ ແລ້ວກົດ "ສົ່ງແລ້ວ ✓" ເມື່ອສົ່ງຄົບ'],
-      o:n.i-3,go:k,tag:k==='chick'?'ເຕີມໄກ່':'ສັ່ງເຄື່ອງ'});
+      o:n.i-3,go:k,tag:k==='chick'?'ເຕີມໄກ່':'ສັ່ງຂອງແຫ້ງ'});
   });
   if(bigLeft()<0)al.push({lv:'warn',t:`ສະຕ໋ອກໃຫຍ່ຕິດລົບ ${fmtN(bigLeft())} kg`,lines:[`ຮັບເຂົ້າ ${fmtN(bigIn())} kg ແຕ່ສັ່ງເຕີມໄກ່ໄປ ${fmtN(bigOut())} kg`,'ກວດ/ເພີ່ມຍອດຮັບເຂົ້າສະຕ໋ອກໃຫຍ່ ຫຼື ກວດນ້ຳໜັກຕໍ່ຢູນິດ/ແກັດໃນໜ້າ "ເຕີມໄກ່"'],o:-3,go:'big',tag:'ສະຕ໋ອກໃຫຍ່'});
   const low=state.dry.filter(r=>dryLow(r)>0).sort((a,b)=>dryLow(b)-dryLow(a));
@@ -1128,7 +1146,7 @@ function render(){
   renderNav();
   syncDryCatalog();sortAll();stampVer();
   const m=$('#main');
-  m.innerHTML=view==='home'?dashboard():view==='report'?reportView():tableView(view);
+  m.innerHTML=view==='home'?dashboard():view==='report'?reportView():view==='bstock'?bstockView():tableView(view);
   bindMain();
 }
 function bindMain(){
@@ -1632,7 +1650,7 @@ let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('sh
 
 /* ============ start ============ */
 {const sd=document.querySelector('.side');if(sd){const v=document.createElement('div');v.id='verStamp';v.style.cssText='font-size:11px;color:var(--muted);padding:8px 14px 12px';sd.appendChild(v);stampVer()}}
-{const v=location.hash.slice(1);if(v==='home'||v==='report'||SECTIONS[v])view=v}
+{const v=location.hash.slice(1);if(v==='home'||v==='report'||v==='bstock'||SECTIONS[v])view=v}
 render();
 </script>
 </body>
