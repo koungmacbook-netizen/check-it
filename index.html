@@ -262,7 +262,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 19/11/2026 · v21 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 19/11/2026 · v22 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -452,8 +452,10 @@ const SECTIONS={
       {key:'_bt',type:'live',label:'ເນື້ອໄກ່ Big ລວມ + ເຄື່ອງປຸງທີ່ຕ້ອງໃຊ້',live:c=>{const t=bigRaw(c);return t?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) · ເຄື່ອງປຸງ '+BPCT()+'% = <b>'+fmtN(Math.round(t*BPCT())/100)+' ກຣາມ</b>':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
       N('bseason','🧂 ເຄື່ອງປຸງທີ່ໃສ່ Big ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);return t?String(Math.round(t*BPCT())/100):''},autoNote:'ຄິດອັດຕະໂນມັດ = ເນື້ອໄກ່ Big × '+'% ເຄື່ອງປຸງ Big (ຕັ້ງໃນກ່ອງ 🧂 ຂ້າງເທິງ) — ແກ້ໄຂໄດ້'}),
       N('bigAct','⚖️ ນ້ຳໜັກ Big Boneless ຕົວຈິງ ຫຼັງຜະສົມ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);if(!t)return '';const sv=(v.bseason===''||v.bseason==null)?t*BPCT()/100:nz(v.bseason);return String(Math.round((t+sv)*100)/100)},autoNote:'ຄິດອັດຕະໂນມັດ = ເນື້ອໄກ່ Big + ເຄື່ອງປຸງ — ຖ້າຊັ່ງຈິງໄດ້ຕ່າງ ແກ້ໄຂໄດ້'}),
-      N('jr','ຕັດເຮັດ JR (ກຣາມ) — ເອົາອອກຈາກ Big',{formula:true,autoNote:'ໃສ່ນ້ຳໜັກ JR ທີ່ຄິດໄດ້ ຫຼື ຊັ່ງຈິງ — ລະບົບຫັກອອກຈາກ Big ໃຫ້ອັດຕະໂນມັດ'}),
-      N('big','Big Boneless ທີ່ສົ່ງສາຂາໄດ້ (ກຣາມ) = ຕົວຈິງ − JR',{formula:true,auto:v=>{const t=nz(v.bigAct);return t?String(Math.round((t-nz(v.jr))*100)/100):''},autoNote:'ຄິດອັດຕະໂນມັດ = Big ຕົວຈິງ − JR (ຫຼື ພິມຕົວເລກເອງກໍໄດ້)'}),
+      {key:'_hjr',type:'head',label:'🟢 JR — ເອົາສ່ວນໜຶ່ງຂອງ Big ອອກມາເຮັດ JR (ຊັ່ງ 2 ຄັ້ງ ກຣາມ) ລະບົບຫັກອອກຈາກ Big ໃຫ້'},
+      ...[1,2].map(i=>N('jw'+i,'JR ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
+      N('jr','ນ້ຳໜັກ JR ລວມ (ກຣາມ)',{formula:true,auto:v=>slotSum(v,'jw',2),autoNote:'ຄິດອັດຕະໂນມັດຈາກ 2 ຊ່ອງຂ້າງເທິງ (ຫຼື ພິມຕົວເລກລວມເອງກໍໄດ້)'}),
+      N('big','✅ ນ້ຳໜັກຕົວຈິງ Big Boneless ຫຼັງຫັກ JR (ກຣາມ) — ສົ່ງສາຂາໄດ້',{formula:true,auto:v=>{const t=nz(v.bigAct);return t?String(Math.round((t-nz(v.jr))*100)/100):''},autoNote:'ຄິດອັດຕະໂນມັດ = Big ຕົວຈິງ − JR (ຫຼື ພິມຕົວເລກເອງກໍໄດ້)'}),
       N('thigh','ນ້ຳໜັກ Thigh patty (ກຣາມ)',{formula:true,full:true,placeholder:'ປະວ່າງໄວ້ = ຕົວຈິງ − Big bones − JR',autoNote:'ຖ້າປະວ່າງ ລະບົບຈະຄິດໃຫ້: ນ້ຳໜັກຕົວຈິງ − Big bones − JR'}),
       {key:'_net',type:'live',label:'🐔 ເນື້ອໄກ່ສຸດທິ (ຫັກເຄື່ອງປຸງອອກ) — ໃຊ້ຄິດຕົ້ນທຶນ',live:c=>{const th=prodThigh(c),b=nz(c.big),j=nz(c.jr),p=PCT(),q=BPCT();return (th||b||j)?'Thigh <b>'+fmtN(Math.round(th/(1+p/100)))+'</b> · Big <b>'+fmtN(Math.round(b/(1+q/100)))+'</b> · JR <b>'+fmtN(Math.round(j/(1+q/100)))+'</b> ກຣາມ <span style="color:var(--muted)">(ເປັນຕົວເລກອ້າງອີງ — ສະຕ໋ອກ ແລະ ການສົ່ງສາຂາໃຊ້ນ້ຳໜັກຫຼັງຜະສົມ)</span>':'<span style="color:var(--muted)">—</span>'}},
       {key:'_hb',type:'head',label:'🛍 ຈຳນວນຖົງບັນຈຸ (ຫຼັງແພັກ ໃສ່ລັງ/ເພລດ) — ຖົງ'},
