@@ -39,6 +39,7 @@ button,input,select{font:inherit;color:inherit}
 .nav button:hover{background:var(--surface2);color:var(--ink)}
 .nav button[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .nav svg{width:20px;height:20px;flex:none}
+[hidden]{display:none!important}
 .navgrp{font-size:11px;color:var(--muted);padding:10px 12px 2px;letter-spacing:.05em}
 .side .spacer{flex:1}
 .tools{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
@@ -262,7 +263,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 19/11/2026 · v22 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 19/11/2026 · v24 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -382,16 +383,16 @@ const deliveryFields=[
     def:()=>{const p=[...state.prod].reverse().find(r=>batchStats(r).leftTotal>0);return p?p.id:''},
     onPick:(id,inp)=>{const r=state.prod.find(x=>x.id===id);if(!r)return;inp('made').value=r.ferment||'';inp('expiry').value=r.expiry||''}},
   D('made','ສິນຄ້າຜະລິດວັນທີ່'),
-  D('expiry','ສິນຄ້າໝົດອາຍຸວັນທີ່',{auto:v=>v.made?addDays(v.made,5):'',autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ = ວັນຜະລິດ + 5 ວັນ (ແກ້ໄຂໄດ້)'}),
+  D('expiry','ສິນຄ້າໝົດອາຍຸວັນທີ່',{auto:v=>v.made?addDays(v.made,5):''}),
   ...DEL_GROUPS.flatMap(([w,q,tk,tb,name,n,ic])=>[
-    {key:'_h'+w,type:'head',label:ic+' '+name+' — ຊ່ອງລະ 1 ລັງ: ນ້ຳໜັກ (ກຣາມ) + ຈຳນວນຖົງ ລະບົບບວກລວມໃຫ້ອັດຕະໂນມັດ'},
+    {key:'_h'+w,type:'head',label:ic+' '+name},
     ...Array.from({length:n},(_,i)=>i+1).flatMap(i=>[N(w+i,name+' ລັງທີ '+i+' — ນ້ຳໜັກ (ກຣາມ)',{formula:true}),N(q+i,'ຈຳນວນຖົງ',{formula:true})]),
-    N(tk,'ລວມນ້ຳໜັກ '+name+' (ກຣາມ)',{formula:true,auto:v=>slotSum(v,w,n),autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ ຈາກຊ່ອງຂ້າງເທິງ'}),
-    N(tb,'ລວມຖົງ '+name,{formula:true,auto:v=>slotSum(v,q,n),autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ'}),
+    N(tk,'ລວມນ້ຳໜັກ '+name+' (ກຣາມ)',{formula:true,auto:v=>slotSum(v,w,n)}),
+    N(tb,'ລວມຖົງ '+name,{formula:true,auto:v=>slotSum(v,q,n)}),
   ]),
   {key:'_cost',type:'live',label:'💰 ຕົ້ນທຶນການສົ່ງ (ຄິດອັດຕະໂນມັດ)',live:c=>costLive(c)},
-  N('ctn','📦 ຈຳນວນກ່ອງ / ລັງ ທີ່ສົ່ງ',{full:true,formula:true,autoNote:'ໃສ່ຈຳນວນກ່ອງກະດາດທີ່ສົ່ງ — ລະບົບຕັດສະຕ໋ອກກ່ອງ (ໜ້າ ຂອງແຫ້ງ) ໃຫ້ອັດຕະໂນມັດ'}),
-  N('pt','🍔 Bulgogi patty ທີ່ເບີກ (ຊິ້ນ)',{full:true,formula:true,autoNote:'ໃສ່ຈຳນວນຊິ້ນ Bulgogi patty ທີ່ສົ່ງສາຂານີ້ — ຫັກຈາກຍອດ Bulgogi ໃນໜ້າສະຕ໋ອກໃຫຍ່'}),
+  N('ctn','📦 ຈຳນວນກ່ອງ / ລັງ ທີ່ສົ່ງ',{full:true,formula:true}),
+  N('pt','🍔 Bulgogi patty ທີ່ເບີກ (ຊິ້ນ)',{full:true,formula:true}),
 ];
 const deliveryCols=[
   {label:'ວັນທີ່ສົ່ງ',l:1,get:r=>fmtDate(r.date),text:r=>fmtDate(r.date)},
@@ -438,30 +439,31 @@ const SECTIONS={
     title:'ບັນທຶກການຜະລິດ',sub:'ນ້ຳໜັກຕົວຈິງທີ່ໄດ້ ແລະ ການຕັດແຍກເປັນ Big bones / JR / Thigh patty (ກຣາມ)',item:'ການຜະລິດ',extra:()=>seasonPanel()+prodFlow(),
     fields:[
       D('batch','ໄກ່ລະລາຍງວດວັນທີ່',{req:true,def:()=>TODAY}),
-      D('ferment','ວັນທີ່ໝັກ',{auto:v=>v.batch?addDays(v.batch,3):'',autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ = ງວດ + 3 ວັນ (ແກ້ໄຂໄດ້)'}),
-      D('expiry','ສິນຄ້າໝົດອາຍຸວັນທີ່',{auto:v=>v.ferment?addDays(v.ferment,5):'',autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ = ວັນໝັກ + 5 ວັນ (ແກ້ໄຂໄດ້)'}),
-      {key:'_h',type:'head',label:'⚖️ ຊັ່ງນ້ຳໜັກແຍກຫຼາຍຈຸດ (ກຣາມ) — ໃສ່ໄດ້ເຖິງ 8 ຊ່ອງ ລະບົບບວກໃຫ້ອັດຕະໂນມັດ'},
+      D('ferment','ວັນທີ່ໝັກ',{auto:v=>v.batch?addDays(v.batch,3):''}),
+      D('expiry','ສິນຄ້າໝົດອາຍຸວັນທີ່',{auto:v=>v.ferment?addDays(v.ferment,5):''}),
+      {key:'_h',type:'head',label:'⚖️ ເນື້ອໄກ່ · Thigh patty'},
       ...[1,2,3,4,5,6,7,8].map(i=>N('w'+i,'ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
       {key:'_t',type:'live',label:'ນ້ຳໜັກລວມ',live:c=>{const t=[1,2,3,4,5,6,7,8].reduce((a,i)=>a+nz(c['w'+i]),0);return t?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg)':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
       {key:'_s',type:'live',label:'ເຄື່ອງປຸງທີ່ຕ້ອງໃຊ້ (ຄິດອັດຕະໂນມັດ)',live:c=>{const t=nz(c.actual),p=PCT(),b=Math.min(bigRaw(c),t),sv=seaCalc(c);return t?'<b>'+fmtN(Math.round(sv*100)/100)+' ກຣາມ</b> ('+fmtN(sv/1000)+' kg) · '+p+'% ຂອງ '+fmtN(t-b)+(b?' + Big '+BPCT()+'% ຂອງ '+fmtN(b):'')+' ກຣາມ':'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
-      N('actual','ນ້ຳໜັກເນື້ອໄກ່ຕົວຈິງ ກ່ອນຜະສົມ (ກຣາມ)',{req:true,formula:true,autoNote:'ຖ້າປ້ອນຊ່ອງຊັ່ງຂ້າງເທິງ ຊ່ອງນີ້ຈະເຕີມຜົນບວກໃຫ້ອັດຕະໂນມັດ'}),
-      N('season','🧂 ນ້ຳໜັກເຄື່ອງປຸງທີ່ໃສ່ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const a=nz(v.actual);return a?String(Math.round(seaCalc(v)*100)/100):''},autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ = ເນື້ອໄກ່ × % ເຄື່ອງປຸງ (ສ່ວນ Big ໃຊ້ % ຂອງ Big) — ຖ້າຊັ່ງຈິງໄດ້ຕ່າງ ແກ້ໄຂໄດ້'}),
+      N('actual','ນ້ຳໜັກເນື້ອໄກ່ຕົວຈິງ ກ່ອນຜະສົມ (ກຣາມ)',{req:true,formula:true}),
+      N('season','🧂 ນ້ຳໜັກເຄື່ອງປຸງທີ່ໃສ່ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const a=nz(v.actual);return a?String(Math.round(seaCalc(v)*100)/100):''}}),
       {key:'_m',type:'live',label:'⚖️ ນ້ຳໜັກຫຼັງຜະສົມ (ເນື້ອໄກ່ + ເຄື່ອງປຸງ) — ໃຊ້ເປັນຍອດຜະລິດ',live:c=>{const a=nz(c.actual),sv=(c.season===''||c.season==null)?seaCalc(c):nz(c.season),t=a+sv;return a?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) = ໄກ່ '+fmtN(a)+' + ເຄື່ອງປຸງ '+fmtN(Math.round(sv*100)/100):'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
-      {key:'_hbig',type:'head',label:'🟣 Big Boneless — ຊັ່ງເນື້ອໄກ່ສ່ວນ Big ເຖິງ 5 ຄັ້ງ (ກຣາມ) · ເຄື່ອງປຸງ Big ຄິດ % ຂອງ Big ເອງ'},
+      {key:'_hbig',type:'head',label:'🟣 Big Boneless'},
       ...[1,2,3,4,5].map(i=>N('bw'+i,'Big Boneless ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
       {key:'_bt',type:'live',label:'ເນື້ອໄກ່ Big ລວມ + ເຄື່ອງປຸງທີ່ຕ້ອງໃຊ້',live:c=>{const t=bigRaw(c);return t?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) · ເຄື່ອງປຸງ '+BPCT()+'% = <b>'+fmtN(Math.round(t*BPCT())/100)+' ກຣາມ</b>':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
-      N('bseason','🧂 ເຄື່ອງປຸງທີ່ໃສ່ Big ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);return t?String(Math.round(t*BPCT())/100):''},autoNote:'ຄິດອັດຕະໂນມັດ = ເນື້ອໄກ່ Big × '+'% ເຄື່ອງປຸງ Big (ຕັ້ງໃນກ່ອງ 🧂 ຂ້າງເທິງ) — ແກ້ໄຂໄດ້'}),
-      N('bigAct','⚖️ ນ້ຳໜັກ Big Boneless ຕົວຈິງ ຫຼັງຜະສົມ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);if(!t)return '';const sv=(v.bseason===''||v.bseason==null)?t*BPCT()/100:nz(v.bseason);return String(Math.round((t+sv)*100)/100)},autoNote:'ຄິດອັດຕະໂນມັດ = ເນື້ອໄກ່ Big + ເຄື່ອງປຸງ — ຖ້າຊັ່ງຈິງໄດ້ຕ່າງ ແກ້ໄຂໄດ້'}),
-      {key:'_hjr',type:'head',label:'🟢 JR — ເອົາສ່ວນໜຶ່ງຂອງ Big ອອກມາເຮັດ JR (ຊັ່ງ 2 ຄັ້ງ ກຣາມ) ລະບົບຫັກອອກຈາກ Big ໃຫ້'},
+      N('bseason','🧂 ເຄື່ອງປຸງທີ່ໃສ່ Big ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);return t?String(Math.round(t*BPCT())/100):''}}),
+      N('bigAct','⚖️ ນ້ຳໜັກ Big Boneless ຕົວຈິງ ຫຼັງຜະສົມ (ກຣາມ)',{formula:true,auto:v=>{const t=bigRaw(v);if(!t)return '';const sv=(v.bseason===''||v.bseason==null)?t*BPCT()/100:nz(v.bseason);return String(Math.round((t+sv)*100)/100)}}),
+      {key:'_hjr',type:'head',label:'🟢 JR VX'},
       ...[1,2].map(i=>N('jw'+i,'JR ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
-      N('jr','ນ້ຳໜັກ JR ລວມ (ກຣາມ)',{formula:true,auto:v=>slotSum(v,'jw',2),autoNote:'ຄິດອັດຕະໂນມັດຈາກ 2 ຊ່ອງຂ້າງເທິງ (ຫຼື ພິມຕົວເລກລວມເອງກໍໄດ້)'}),
-      N('big','✅ ນ້ຳໜັກຕົວຈິງ Big Boneless ຫຼັງຫັກ JR (ກຣາມ) — ສົ່ງສາຂາໄດ້',{formula:true,auto:v=>{const t=nz(v.bigAct);return t?String(Math.round((t-nz(v.jr))*100)/100):''},autoNote:'ຄິດອັດຕະໂນມັດ = Big ຕົວຈິງ − JR (ຫຼື ພິມຕົວເລກເອງກໍໄດ້)'}),
-      N('thigh','ນ້ຳໜັກ Thigh patty (ກຣາມ)',{formula:true,full:true,placeholder:'ປະວ່າງໄວ້ = ຕົວຈິງ − Big bones − JR',autoNote:'ຖ້າປະວ່າງ ລະບົບຈະຄິດໃຫ້: ນ້ຳໜັກຕົວຈິງ − Big bones − JR'}),
+      N('jr','ນ້ຳໜັກ JR ລວມ (ກຣາມ)',{formula:true,auto:v=>slotSum(v,'jw',2)}),
+      N('big','✅ ນ້ຳໜັກຕົວຈິງ Big Boneless ຫຼັງຫັກ JR (ກຣາມ) — ສົ່ງສາຂາໄດ້',{formula:true,auto:v=>{const t=nz(v.bigAct);return t?String(Math.round((t-nz(v.jr))*100)/100):''}}),
+      N('thigh','ນ້ຳໜັກ Thigh patty (ກຣາມ)',{formula:true,full:true,placeholder:'ປະວ່າງໄວ້ = ຕົວຈິງ − Big bones − JR'}),
       {key:'_net',type:'live',label:'🐔 ເນື້ອໄກ່ສຸດທິ (ຫັກເຄື່ອງປຸງອອກ) — ໃຊ້ຄິດຕົ້ນທຶນ',live:c=>{const th=prodThigh(c),b=nz(c.big),j=nz(c.jr),p=PCT(),q=BPCT();return (th||b||j)?'Thigh <b>'+fmtN(Math.round(th/(1+p/100)))+'</b> · Big <b>'+fmtN(Math.round(b/(1+q/100)))+'</b> · JR <b>'+fmtN(Math.round(j/(1+q/100)))+'</b> ກຣາມ <span style="color:var(--muted)">(ເປັນຕົວເລກອ້າງອີງ — ສະຕ໋ອກ ແລະ ການສົ່ງສາຂາໃຊ້ນ້ຳໜັກຫຼັງຜະສົມ)</span>':'<span style="color:var(--muted)">—</span>'}},
-      {key:'_hb',type:'head',label:'🛍 ຈຳນວນຖົງບັນຈຸ (ຫຼັງແພັກ ໃສ່ລັງ/ເພລດ) — ຖົງ'},
+      {key:'_hb',type:'head',label:'🛍 ຈຳນວນຖົງບັນຈຸ'},
       N('bgT','Thigh patty (ຖົງ)',{formula:true}),
-      N('bgB','Big Boneless (ຖົງ)',{formula:true}),
+      N('bgBall','Big Boneless ຖົງລວມ ກ່ອນຫັກ JR (ຖົງ)',{formula:true}),
       N('bgJ','JR (ຖົງ)',{formula:true}),
+      N('bgB','✅ Big Boneless ຖົງຕົວຈິງ ຫຼັງຫັກ JR (ຖົງ)',{formula:true,auto:v=>{const t=nz(v.bgBall);return t?String(Math.max(0,t-nz(v.bgJ))):''}}),
       {key:'_bt',type:'live',label:'ລວມຖົງທັງໝົດ',live:c=>{const t=nz(c.bgT)+nz(c.bgB)+nz(c.bgJ);return t?'<b>'+fmtN(t)+' ຖົງ</b>':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
     ],
     cols:[
@@ -1289,6 +1291,23 @@ function seasonPanel(){
   <div style="flex:1;min-width:200px;font-size:13px;color:var(--ink)">${its.length?'ສະຕ໋ອກເຄື່ອງປຸງ (ຕັດອັດຕະໂນມັດ): '+its.map(i=>'<b>'+esc(i.name)+'</b> ເຫຼືອ '+fmtN(nz(i.qty))+' '+esc(i.unit||'')).join(' · '):'<span style="color:var(--muted)">ຍັງບໍ່ໄດ້ຕັ້ງ — ໄປ ສະຕ໋ອກຂອງແຫ້ງ ເພີ່ມເຄື່ອງປຸງ ແລ້ວໃສ່ 🧂 ສັດສ່ວນ % ແລະ ນ້ຳໜັກ 1 Unit ເພື່ອໃຫ້ຕັດສະຕ໋ອກອັດຕະໂນມັດ</span>'}</div></div>`}
 function setBSeason(v){state.bseasonPct=String(parseFloat(v)||0);save();render()}
 function setSeason(v){state.seasonPct=String(parseFloat(v)||0);save();render()}
+function setupSlots(S){
+  const has=k=>S.fields.some(f=>f.key===k),G=[];
+  if(has('w1'))G.push([['w'],8],[['bw'],5],[['jw'],2]);
+  if(has('t1'))G.push([['t','tq'],5],[['b','bq'],5],[['j','jq'],3]);
+  G.forEach(([pf,n])=>{
+    const W=i=>pf.map(p=>{const e=form.querySelector('#f_'+p+i);return e&&e.closest('.field')}).filter(Boolean);
+    const filled=i=>pf.some(p=>{const e=form.querySelector('#f_'+p+i);return e&&e.value.trim()!==''});
+    let shown=1;for(let i=2;i<=n;i++)if(filled(i))shown=i;
+    for(let i=shown+1;i<=n;i++)W(i).forEach(e=>e.hidden=true);
+    const last=W(n).pop();if(!last)return;
+    const holder=document.createElement('div');holder.className='field full';holder.style.gridColumn='1/-1';
+    const btn=document.createElement('button');btn.type='button';btn.className='btn';btn.textContent='＋ ເພີ່ມຊ່ອງ';holder.appendChild(btn);
+    last.after(holder);
+    const upd=()=>{holder.hidden=shown>=n};upd();
+    btn.onclick=()=>{if(shown<n){shown++;W(shown).forEach(e=>e.hidden=false);const f=form.querySelector('#f_'+pf[0]+shown);if(f)f.focus()}upd()};
+  });
+}
 function openForm(sec,id){
   form.onclick=null;form.onchange=null;form.oninput=null;
   if(sec==='bthaw')return bpForm(id);
@@ -1314,6 +1333,7 @@ function openForm(sec,id){
     </div>`).join('')}</div>
   ${ORDERS[sec]?`<datalist id="dl_pick">${state.catalogs[sec].map(c=>`<option value="${esc(c.code?c.code+' · '+c.name:c.name)}"></option>`).join('')}</datalist>`:''}
   <div class="dlg-actions"><button type="button" class="btn" id="cancel">ຍົກເລີກ</button><button type="submit" class="btn primary">ບັນທຶກ</button></div>`;
+  setupSlots(S);
   const inp=k=>form.querySelector(`[name="${k}"]`)||{value:'',checked:false,addEventListener(){},focus(){}};
   const updateEv=f=>{
     const el=form.querySelector(`[data-ev="${f.key}"]`);if(!el)return;
