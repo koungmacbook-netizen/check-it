@@ -263,7 +263,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 19/11/2026 · v24 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 19/11/2026 · v25 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -344,6 +344,9 @@ function normalize(){
     if('t1' in r||'tq1' in r||'b1' in r||'j1' in r)return;
     DEL_GROUPS.forEach(([w,q,tk,tb,,n])=>{const ws=splitSlots(r[tk],n),qs=splitSlots(r[tb],n);for(let i=1;i<=n;i++){r[w+i]=ws[i-1];r[q+i]=qs[i-1]}});
   }));
+  (state.prod||[]).forEach(r=>{const b=bigRaw(r);if(b<=0||r.season===''||r.season==null)return;const a=nz(r.actual),p=PCT(),q=BPCT();
+    const old=Math.max(0,a-Math.min(b,a))*p/100+Math.min(b,a)*q/100,cur=parseFloat(r.season);
+    if(!isNaN(cur)&&Math.abs(cur-old)<0.01&&Math.abs(old-a*p/100)>0.01)r.season=String(Math.round(a*p)/100)});
   ORDER_KEYS.forEach(k=>{if(!state[k])state[k]=sd[k]||[];});
   ['poHead','chickHead','ecoHead'].forEach(h=>state[h]={...sd[h],...(state[h]||{})});
   state.fzoHead={prNo:'MT-FRZ001',prNo2:'',by:state.ecoHead.by||'',date:TODAY,need:'',requestor:state.ecoHead.requestor||'',dest:state.ecoHead.dest||'R&D',tel:state.ecoHead.tel||'',purpose:'',...(state.fzoHead||{})};
@@ -367,9 +370,10 @@ const thawCalc={bags:r=>nz(r.boxes)*6,kg:r=>nz(r.boxes)*12};
 function bigRaw(v){const t=slotSum(v,'bw',5);return t===''?0:parseFloat(t)}
 const PCT=()=>parseFloat(state.seasonPct)||0,BPCT=()=>parseFloat(state.bseasonPct)||0;
 /* ເຄື່ອງປຸງທີ່ຄວນໃຊ້: ສ່ວນ Big = BPCT% (1.3) · ສ່ວນທີ່ເຫຼືອ = PCT% (1.5) */
-function seaCalc(v){const a=nz(v.actual),b=Math.min(bigRaw(v),a);return Math.max(0,a-b)*PCT()/100+b*BPCT()/100}
-const prodSeason=r=>{const v=ev(r.season);return (r.season!==''&&r.season!=null&&v!=null&&!isNaN(v))?v:seaCalc(r)};
-const prodTotal=r=>nz(r.actual)+prodSeason(r);   /* ນ້ຳໜັກຫຼັງຜະສົມເຄື່ອງປຸງ = ໄກ່ + ເຄື່ອງປຸງ */
+function seaCalc(v){return nz(v.actual)*PCT()/100}   /* ເຄື່ອງປຸງ Thigh = 1.5% ຂອງນ້ຳໜັກເນື້ອໄກ່ທີ່ຊັ່ງ */
+function bseaOf(v){const t=ev(v.bseason);return (v.bseason!==''&&v.bseason!=null&&t!=null&&!isNaN(t))?t:bigRaw(v)*BPCT()/100}
+const prodSeason=r=>{const v=ev(r.season);return ((r.season!==''&&r.season!=null&&v!=null&&!isNaN(v))?v:seaCalc(r))+bseaOf(r)};
+const prodTotal=r=>nz(r.actual)+bigRaw(r)+prodSeason(r);   /* ນ້ຳໜັກຫຼັງຜະສົມເຄື່ອງປຸງ = ໄກ່ + ເຄື່ອງປຸງ */
 const prodThigh=r=>{const t=ev(r.thigh);return (t!=null&&!isNaN(t))?t:Math.max(0,prodTotal(r)-nz(r.big)-nz(r.jr))};
 const prodBags=r=>nz(r.bgT)+nz(r.bgB)+nz(r.bgJ);
 const delCalc={kg:r=>nz(r.tk)+nz(r.bk)+nz(r.jk),bags:r=>nz(r.tb)+nz(r.bb)+nz(r.jb)};
@@ -444,10 +448,10 @@ const SECTIONS={
       {key:'_h',type:'head',label:'⚖️ ເນື້ອໄກ່ · Thigh patty'},
       ...[1,2,3,4,5,6,7,8].map(i=>N('w'+i,'ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
       {key:'_t',type:'live',label:'ນ້ຳໜັກລວມ',live:c=>{const t=[1,2,3,4,5,6,7,8].reduce((a,i)=>a+nz(c['w'+i]),0);return t?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg)':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
-      {key:'_s',type:'live',label:'ເຄື່ອງປຸງທີ່ຕ້ອງໃຊ້ (ຄິດອັດຕະໂນມັດ)',live:c=>{const t=nz(c.actual),p=PCT(),b=Math.min(bigRaw(c),t),sv=seaCalc(c);return t?'<b>'+fmtN(Math.round(sv*100)/100)+' ກຣາມ</b> ('+fmtN(sv/1000)+' kg) · '+p+'% ຂອງ '+fmtN(t-b)+(b?' + Big '+BPCT()+'% ຂອງ '+fmtN(b):'')+' ກຣາມ':'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
-      N('actual','ນ້ຳໜັກເນື້ອໄກ່ຕົວຈິງ ກ່ອນຜະສົມ (ກຣາມ)',{req:true,formula:true}),
-      N('season','🧂 ນ້ຳໜັກເຄື່ອງປຸງທີ່ໃສ່ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const a=nz(v.actual);return a?String(Math.round(seaCalc(v)*100)/100):''}}),
-      {key:'_m',type:'live',label:'⚖️ ນ້ຳໜັກຫຼັງຜະສົມ (ເນື້ອໄກ່ + ເຄື່ອງປຸງ) — ໃຊ້ເປັນຍອດຜະລິດ',live:c=>{const a=nz(c.actual),sv=(c.season===''||c.season==null)?seaCalc(c):nz(c.season),t=a+sv;return a?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) = ໄກ່ '+fmtN(a)+' + ເຄື່ອງປຸງ '+fmtN(Math.round(sv*100)/100):'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
+      {key:'_s',type:'live',label:'ເຄື່ອງປຸງ Thigh ທີ່ຕ້ອງໃຊ້',live:c=>{const t=nz(c.actual);return t?'<b>'+fmtN(Math.round(t*PCT())/100)+' ກຣາມ</b> · '+PCT()+'% ຂອງ '+fmtN(t)+' ກຣາມ':'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
+      N('actual','ນ້ຳໜັກເນື້ອໄກ່ Thigh ຕົວຈິງ ກ່ອນຜະສົມ (ກຣາມ)',{req:true,formula:true}),
+      N('season','🧂 ເຄື່ອງປຸງ Thigh ທີ່ໃສ່ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const a=nz(v.actual);return a?String(Math.round(seaCalc(v)*100)/100):''}}),
+      {key:'_m',type:'live',label:'⚖️ ນ້ຳໜັກຫຼັງຜະສົມທັງໝົດ (Thigh + Big) — ໃຊ້ເປັນຍອດຜະລິດ',live:c=>{const a=nz(c.actual),bg=bigRaw(c),st=(c.season===''||c.season==null)?seaCalc(c):nz(c.season),sb=bseaOf(c),t=a+bg+st+sb;return (a||bg)?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) = Thigh '+fmtN(Math.round((a+st)*100)/100)+' + Big '+fmtN(Math.round((bg+sb)*100)/100):'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
       {key:'_hbig',type:'head',label:'🟣 Big Boneless'},
       ...[1,2,3,4,5].map(i=>N('bw'+i,'Big Boneless ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
       {key:'_bt',type:'live',label:'ເນື້ອໄກ່ Big ລວມ + ເຄື່ອງປຸງທີ່ຕ້ອງໃຊ້',live:c=>{const t=bigRaw(c);return t?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) · ເຄື່ອງປຸງ '+BPCT()+'% = <b>'+fmtN(Math.round(t*BPCT())/100)+' ກຣາມ</b>':'<span style="color:var(--muted)">— ຍັງບໍ່ໄດ້ປ້ອນ —</span>'}},
@@ -470,7 +474,7 @@ const SECTIONS={
       {label:'ງວດລະລາຍວັນທີ່',l:1,get:r=>fmtDate(r.batch),text:r=>fmtDate(r.batch)},
       {label:'ວັນທີ່ໝັກ',l:1,get:r=>fmtDate(r.ferment)},
       {label:'ໝົດອາຍຸ',l:1,get:r=>expiryCell(r.expiry),text:r=>fmtDate(r.expiry)},
-      {label:'ເນື້ອໄກ່ (ກຣາມ)',get:r=>fmtN(ev(r.actual)),sum:r=>nz(r.actual)},
+      {label:'ເນື້ອໄກ່ (ກຣາມ)',get:r=>fmtN(nz(r.actual)+bigRaw(r)),sum:r=>nz(r.actual)+bigRaw(r)},
       {label:'ເຄື່ອງປຸງ (ກຣາມ)',calc:1,get:r=>fmtN(prodSeason(r)),sum:prodSeason},
       {label:'ຫຼັງຜະສົມ (ກຣາມ)',calc:1,get:r=>'<b>'+fmtN(prodTotal(r))+'</b>',sum:prodTotal},
       {label:'ຫຼັງຜະສົມ (kg)',calc:1,get:r=>fmtN(prodTotal(r)/1000),sum:r=>prodTotal(r)/1000},
@@ -959,7 +963,7 @@ function rpData(a,b){
   const boxes=sum(thaw,r=>nz(r.boxes));
   const recv=sum(state.stock.filter(r=>inR(r.recv)),r=>nz(r.qty));
   const ord=sum(state.chickOrders.filter(r=>inR(r.date)),r=>nz(r.ordered||r.qty));
-  const P={bgT:sum(pr,r=>nz(r.bgT)),bgB:sum(pr,r=>nz(r.bgB)),bgJ:sum(pr,r=>nz(r.bgJ)),actual:sum(pr,prodTotal),raw:sum(pr,r=>nz(r.actual)),thigh:sum(pr,prodThigh),big:sum(pr,r=>nz(r.big)),jr:sum(pr,r=>nz(r.jr)),n:pr.length};
+  const P={bgT:sum(pr,r=>nz(r.bgT)),bgB:sum(pr,r=>nz(r.bgB)),bgJ:sum(pr,r=>nz(r.bgJ)),actual:sum(pr,prodTotal),raw:sum(pr,r=>nz(r.actual)+bigRaw(r)),thigh:sum(pr,prodThigh),big:sum(pr,r=>nz(r.big)),jr:sum(pr,r=>nz(r.jr)),n:pr.length};
   const br=state.branches.map(x=>{const rows=state[x.id].filter(r=>inR(r.date));return {id:x.id,name:x.name,n:rows.length,tk:sum(rows,r=>nz(r.tk)),tb:sum(rows,r=>nz(r.tb)),bk:sum(rows,r=>nz(r.bk)),bb:sum(rows,r=>nz(r.bb)),jk:sum(rows,r=>nz(r.jk)),jb:sum(rows,r=>nz(r.jb)),ctn:sum(rows,r=>nz(r.ctn)),kg:sum(rows,delCalc.kg),bags:sum(rows,delCalc.bags)}});
   const D={kg:sum(br,x=>x.kg),bags:sum(br,x=>x.bags),ctn:sum(br,x=>x.ctn),tk:sum(br,x=>x.tk),bk:sum(br,x=>x.bk),jk:sum(br,x=>x.jk)};
   const season=sum(pr,prodSeason);
