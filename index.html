@@ -39,6 +39,7 @@ button,input,select{font:inherit;color:inherit}
 .nav button:hover{background:var(--surface2);color:var(--ink)}
 .nav button[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .nav svg{width:20px;height:20px;flex:none}
+.navgrp{font-size:11px;color:var(--muted);padding:10px 12px 2px;letter-spacing:.05em}
 .side .spacer{flex:1}
 .tools{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
 .tools button{display:flex;gap:9px;align-items:center;border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:9px;cursor:pointer;text-align:left;font-size:13.5px}
@@ -138,6 +139,7 @@ dialog h3{margin:0 0 16px;font-size:18px}
   .side{position:fixed;inset:auto 0 0 0;top:auto;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);z-index:20;gap:2px}
   .brand,.tools,.side .spacer{display:none}
   .nav{display:flex;width:100%;gap:2px;overflow-x:auto}
+  .navgrp{display:none}
   .nav button{flex-direction:column;gap:2px;padding:6px 2px;font-size:11px;text-align:center;justify-content:center;flex:1;min-width:56px}
   .nav button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   main{padding:18px 16px 96px}
@@ -260,7 +262,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 16/11/2026 · v18 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 19/11/2026 · v20 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -317,6 +319,7 @@ function normalize(){
   state.branches.forEach(b=>state[b.id]=state[b.id]||[]);
   state.sentOrders=state.sentOrders||{};
   if(state.seasonPct==null)state.seasonPct='1.5';
+  ['chickPrice','ptPrice','logo'].forEach(k=>{if(state[k]==null)state[k]=''});if(state.invCost==null)state.invCost='1';
   syncDryCatalog();
   state.dryLog=state.dryLog||[];if(state.rptTitle==null)state.rptTitle='ໂຮງໝັກໄກ່';
   /* ຍ້າຍ "ເອົາອອກລະລາຍ" ເກົ່າໃນໜ້າຮັບເຄື່ອງ ໄປເປັນລາຍການໃນໜ້າລະລາຍ (ລິງກ໌ກັນ) */
@@ -382,6 +385,7 @@ const deliveryFields=[
     N(tk,'ລວມນ້ຳໜັກ '+name+' (ກຣາມ)',{formula:true,auto:v=>slotSum(v,w,n),autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ ຈາກຊ່ອງຂ້າງເທິງ'}),
     N(tb,'ລວມຖົງ '+name,{formula:true,auto:v=>slotSum(v,q,n),autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ'}),
   ]),
+  {key:'_cost',type:'live',label:'💰 ຕົ້ນທຶນການສົ່ງ (ຄິດອັດຕະໂນມັດ)',live:c=>costLive(c)},
   N('ctn','📦 ຈຳນວນກ່ອງ / ລັງ ທີ່ສົ່ງ',{full:true,formula:true,autoNote:'ໃສ່ຈຳນວນກ່ອງກະດາດທີ່ສົ່ງ — ລະບົບຕັດສະຕ໋ອກກ່ອງ (ໜ້າ ຂອງແຫ້ງ) ໃຫ້ອັດຕະໂນມັດ'}),
   N('pt','🍔 Bulgogi patty ທີ່ເບີກ (ຊິ້ນ)',{full:true,formula:true,autoNote:'ໃສ່ຈຳນວນຊິ້ນ Bulgogi patty ທີ່ສົ່ງສາຂານີ້ — ຫັກຈາກຍອດ Bulgogi ໃນໜ້າສະຕ໋ອກໃຫຍ່'}),
 ];
@@ -399,6 +403,7 @@ const deliveryCols=[
   {label:'📦 ກ່ອງ',get:r=>fmtN(ev(r.ctn)),sum:r=>nz(r.ctn)},
   {label:'🍔 Bulgogi (ຊິ້ນ)',get:r=>r.pt?fmtN(ev(r.pt)):'',sum:r=>nz(r.pt)},
   {label:'ລວມ (ກຣາມ)',calc:1,get:r=>fmtN(delCalc.kg(r)),sum:delCalc.kg},
+  {label:'💰 ຕົ້ນທຶນ (ກີບ)',calc:1,get:r=>{const d=delCost(r);return d.total>0?fmtN(Math.round(d.total))+(d.miss.length?' ⚠':''):''},sum:r=>Math.round(delCost(r).total),text:r=>{const d=delCost(r);return d.total>0?String(Math.round(d.total)):''}},
   {label:'ລວມ (kg)',calc:1,get:r=>fmtN(delCalc.kg(r)/1000),sum:r=>delCalc.kg(r)/1000},
   {label:'ລວມ ຖົງ',calc:1,get:r=>fmtN(delCalc.bags(r)),sum:delCalc.bags},
 ];
@@ -438,7 +443,9 @@ const SECTIONS={
       N('actual','ນ້ຳໜັກເນື້ອໄກ່ຕົວຈິງ ກ່ອນຜະສົມ (ກຣາມ)',{req:true,formula:true,autoNote:'ຖ້າປ້ອນຊ່ອງຊັ່ງຂ້າງເທິງ ຊ່ອງນີ້ຈະເຕີມຜົນບວກໃຫ້ອັດຕະໂນມັດ'}),
       N('season','🧂 ນ້ຳໜັກເຄື່ອງປຸງທີ່ໃສ່ຈິງ (ກຣາມ)',{formula:true,auto:v=>{const a=nz(v.actual);return a?String(Math.round(a*(parseFloat(state.seasonPct)||0))/100):''},autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດ = ເນື້ອໄກ່ × % ເຄື່ອງປຸງ — ຖ້າຊັ່ງຈິງໄດ້ຕ່າງ ແກ້ໄຂໄດ້'}),
       {key:'_m',type:'live',label:'⚖️ ນ້ຳໜັກຫຼັງຜະສົມ (ເນື້ອໄກ່ + ເຄື່ອງປຸງ) — ໃຊ້ເປັນຍອດຜະລິດ',live:c=>{const a=nz(c.actual),sv=(c.season===''||c.season==null)?a*(parseFloat(state.seasonPct)||0)/100:nz(c.season),t=a+sv;return a?'<b>'+fmtN(t)+' ກຣາມ</b> ('+fmtN(t/1000)+' kg) = ໄກ່ '+fmtN(a)+' + ເຄື່ອງປຸງ '+fmtN(Math.round(sv*100)/100):'<span style="color:var(--muted)">— ປ້ອນນ້ຳໜັກກ່ອນ —</span>'}},
-      N('big','ຕັດເຮັດ Big bones (ກຣາມ)',{formula:true}),
+      {key:'_hbig',type:'head',label:'🟣 ຕັດເຮັດ Big Boneless — ຊັ່ງແຍກໄດ້ເຖິງ 5 ຄັ້ງ (ກຣາມ) ລະບົບບວກໃຫ້ອັດຕະໂນມັດ'},
+      ...[1,2,3,4,5].map(i=>N('bw'+i,'Big Boneless ຊັ່ງຄັ້ງທີ '+i+' (ກຣາມ)',{formula:true})),
+      N('big','ຕັດເຮັດ Big bones ລວມ (ກຣາມ)',{formula:true,auto:v=>slotSum(v,'bw',5),autoNote:'ຄິດໃຫ້ອັດຕະໂນມັດຈາກ 5 ຊ່ອງຂ້າງເທິງ (ຫຼື ພິມຕົວເລກລວມໂດຍກົງກໍໄດ້)'}),
       N('jr','ຕັດເຮັດ JR (ກຣາມ)',{formula:true}),
       N('thigh','ນ້ຳໜັກ Thigh patty (ກຣາມ)',{formula:true,full:true,placeholder:'ປະວ່າງໄວ້ = ຕົວຈິງ − Big bones − JR',autoNote:'ຖ້າປະວ່າງ ລະບົບຈະຄິດໃຫ້: ນ້ຳໜັກຕົວຈິງ − Big bones − JR'}),
       {key:'_hb',type:'head',label:'🛍 ຈຳນວນຖົງບັນຈຸ (ຫຼັງແພັກ ໃສ່ລັງ/ເພລດ) — ຖົງ'},
@@ -513,7 +520,7 @@ function orderSection(k){
 }
 ORDER_KEYS.forEach(k=>SECTIONS[k]=orderSection(k));
 SECTIONS.chick.extra=chickBigPanel;
-function branchSection(b){return {title:'ສົ່ງ'+b.name,sub:'ບັນທຶກການສົ່ງສິນຄ້າໄປ'+b.name+' — ໃສ່ເປັນສູດໄດ້ ເຊັ່ນ 13550+13400',item:'ການສົ່ງ'+b.name,fields:deliveryFields,cols:deliveryCols,branch:b.id,extra:()=>printerPanel()+packPanel()+batchAvail()}}
+function branchSection(b){return {title:'ສົ່ງ'+b.name,sub:'ບັນທຶກການສົ່ງສິນຄ້າໄປ'+b.name+' — ໃສ່ເປັນສູດໄດ້ ເຊັ່ນ 13550+13400',item:'ການສົ່ງ'+b.name,fields:deliveryFields,cols:deliveryCols,branch:b.id,extra:()=>printerPanel()+costPanel()+packPanel()+batchAvail()}}
 function syncBranches(){
   Object.keys(SECTIONS).forEach(k=>{if(SECTIONS[k].branch&&!state.branches.find(b=>b.id===k))delete SECTIONS[k]});
   state.branches.forEach(b=>{state[b.id]=state[b.id]||[];SECTIONS[b.id]=branchSection(b)});
@@ -587,6 +594,7 @@ SECTIONS.dry={
     N('isBox','📦 ເປັນກ່ອງ/ລັງສົ່ງ (ໃສ່ 1)',{autoNote:'ໃສ່ 1 ໃນລາຍການກ່ອງກະດາດ — ທຸກຄັ້ງທີ່ບັນທຶກການສົ່ງ ລະບົບຈະຕັດສະຕ໋ອກກ່ອງນີ້ອັດຕະໂນມັດ'}),
     N('isBag','🛍 ເປັນຖົງພລາສຕິກບັນຈຸ (ໃສ່ 1)',{autoNote:'ໃສ່ 1 ໃນລາຍການຖົງພລາສຕິກ — ທຸກຄັ້ງທີ່ບັນທຶກການສົ່ງ (ທຸກສາຂາ) ລະບົບຕັດສະຕ໋ອກຕາມຈຳນວນຖົງທີ່ສົ່ງ ໃຫ້ອັດຕະໂນມັດ'}),
     N('spShare','🧂 ສັດສ່ວນໃນເຄື່ອງປຸງໝັກ (%)',{autoNote:'ສະເພາະເຄື່ອງປຸງໝັກໄກ່ (ເຊັ່ນ Hot Spic M) — ຕັດອັດຕະໂນມັດເມື່ອຜະລິດໄກ່ເທົ່ານັ້ນ, ບໍ່ໃຊ້ກັບ Bulgogi. ຕົວດຽວໃສ່ 100, ຫຼາຍຕົວແບ່ງ % ລວມ 100. ເຄື່ອງປຸງຂອງ Bulgogi ໃຫ້ປະວ່າງ (ເລືອກເອງໃນໜ້າຜະລິດ Bulgogi)'}),
+    N('price','💰 ລາຄາຕໍ່ 1 Unit (ກີບ)',{autoNote:'ໃສ່ລາຄາຊື້ຕໍ່ 1 Unit — ໃຊ້ຄິດຕົ້ນທຶນການສົ່ງສິນຄ້າຕໍ່ສາຂາ'}),
     N('gper','ນ້ຳໜັກ 1 Unit (ກຣາມ)',{autoNote:'ເຊັ່ນ ຖ້າ Unit ເປັນຖົງ 1 kg ໃສ່ 1000 — ໃຊ້ແປງກຣາມທີ່ໃຊ້ໝັກ ເປັນຈຳນວນ Unit ທີ່ຕັດສະຕ໋ອກ'}),
     D('exp','📅 ວັນໝົດອາຍຸ (ຖ້າມີ)',{autoNote:'ໃສ່ວັນໝົດອາຍຸຂອງລົດທີ່ມີຢູ່ — ລະບົບແຈ້ງເຕືອນກ່ອນໝົດອາຍຸ 30 ວັນ'}),
     {key:'img',label:'🖼 ຮູບສິນຄ້າ (ຈະແນບໃນໄຟລ໌ Excel ໃບສັ່ງເຄື່ອງ)',type:'img',full:true},
@@ -596,6 +604,7 @@ SECTIONS.dry={
     {label:'ຊື່ສິນຄ້າ',l:1,get:r=>'<span style="white-space:normal;display:inline-block;min-width:200px">'+esc(r.name)+'</span>'},
     {label:'ຄົງເຫຼືອ',calc:1,get:r=>(r.qty===''||r.qty==null?'<span style="color:var(--muted);font-weight:400">ຍັງບໍ່ນັບ</span>':fmtN(ev(r.qty)))+dryBadge(r)},
     {label:'Unit',l:1,get:r=>esc(r.unit)},
+    {label:'💰 ລາຄາ/Unit',get:r=>nz(r.price)>0?fmtN(nz(r.price)):'<span style="color:var(--muted)">–</span>',text:r=>nz(r.price)>0?fmtN(nz(r.price)):''},
     {label:'ຮູບ',l:1,get:r=>r.img?`<img src="${r.img}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">`:'',text:r=>r.img?'ມີຮູບ':''},
     {label:'📦',l:1,get:r=>(nz(r.isBox)>0?'<span class="badge">📦 ກ່ອງສົ່ງ</span> ':'')+(nz(r.isBag)>0?'<span class="badge">🛍 ຖົງບັນຈຸ</span>':'')},
     {label:'🧂 ໝັກໄກ່',l:1,get:r=>nz(r.spShare)>0?'<span class="badge">🧂 ໝັກໄກ່ເທົ່ານັ້ນ '+fmtN(nz(r.spShare))+'%</span>':''},
@@ -774,6 +783,7 @@ SECTIONS.fz={
     {key:'unit',label:'Unit',type:'text',def:()=>'kg'},
     N('qty','ຈຳນວນຄົງເຫຼືອ',{def:()=>'0'}),
     N('min','ຂັ້ນຕ່ຳ (ແຈ້ງເຕືອນເມື່ອ ≤)',{autoNote:'ປະວ່າງໄວ້ = ບໍ່ແຈ້ງເຕືອນ'}),
+    N('price','💰 ລາຄາຕໍ່ 1 Unit (ກີບ)',{autoNote:'ໃສ່ລາຄາຊື້ຕໍ່ 1 Unit — ໃຊ້ຄິດຕົ້ນທຶນການສົ່ງສິນຄ້າຕໍ່ສາຂາ'}),
     N('gper','ນ້ຳໜັກ 1 Unit (ກຣາມ)',{autoNote:'ປະວ່າງ = ຖ້າ Unit ເປັນ kg ຖືວ່າ 1000 ກຣາມ — ໃຊ້ແປງກຣາມທີ່ໃສ່ໃນການຜະລິດ Bulgogi ເປັນ Unit ທີ່ຕັດສະຕ໋ອກ'}),
     D('exp','📅 ວັນໝົດອາຍຸ (ຖ້າມີ)',{autoNote:'ລະບົບແຈ້ງເຕືອນກ່ອນໝົດອາຍຸ 30 ວັນ'}),
     {key:'note',label:'ໝາຍເຫດ / ບ່ອນເກັບ',type:'text',full:true},
@@ -785,6 +795,7 @@ SECTIONS.fz={
     {label:'ຊື່ສິນຄ້າ',l:1,get:r=>'<span style="white-space:normal;display:inline-block;min-width:200px">'+esc(r.name)+'</span>'},
     {label:'ຄົງເຫຼືອ',calc:1,get:r=>(r.qty===''||r.qty==null?'<span style="color:var(--muted);font-weight:400">ຍັງບໍ່ນັບ</span>':fmtN(ev(r.qty)))+dryBadge(r)},
     {label:'Unit',l:1,get:r=>esc(r.unit)},
+    {label:'💰 ລາຄາ/Unit',get:r=>nz(r.price)>0?fmtN(nz(r.price)):'<span style="color:var(--muted)">–</span>',text:r=>nz(r.price)>0?fmtN(nz(r.price)):''},
     {label:'ຄິດເປັນກຣາມ',get:r=>{const u=gpu(r,'fz');return u?fmtN(Math.round(nz(r.qty)*u))+' g':'<span style="color:var(--bad)">ໃສ່ນ້ຳໜັກ/Unit</span>'},text:r=>''},
     {label:'ຂັ້ນຕ່ຳ',get:r=>fmtN(ev(r.min))},
     {label:'📅 ໝົດອາຍຸ',l:1,get:r=>r.exp?fmtDate(r.exp)+' '+expBadge(r):'',text:r=>r.exp?fmtDate(r.exp):''},
@@ -909,8 +920,10 @@ const NAV=[
 let view='home',query='';
 function renderNav(){
   const truck='<path d="M1 6h13v10H1zM14 10h5l3 3v3h-8M6 19a2 2 0 1 0 0-.01M18 19a2 2 0 1 0 0-.01"/>';
-  const items=[...NAV.slice(0,3),...state.branches.map(b=>[b.id,b.name,truck]),...NAV.slice(3)];
-  $('#nav').innerHTML=items.map(([k,l,p])=>`<button data-v="${k}" ${k===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg><span>${l}</span></button>`).join('');
+  const by={};NAV.forEach(n=>by[n[0]]=n);
+  const grp=[[null,['home']],['ສົ່ງສາຂາ',state.branches.map(b=>[b.id,b.name,truck])],['ການຜະລິດ',['thaw','prod','bthaw']],['ສະຕ໋ອກ',['big','bstock','dry','fz','stock']],['ສັ່ງຊື້',['po','fzo','chick']],['ອື່ນໆ',['report','eco']]];
+  const items=[];grp.forEach(([t,ks])=>ks.forEach((k,i)=>{const it=typeof k==='string'?by[k]:k;if(it)items.push(i===0&&t?[...it,t]:it)}));
+  $('#nav').innerHTML=items.map(([k,l,p,gt])=>(gt?`<div class="navgrp">${gt}</div>`:'')+`<button data-v="${k}" ${k===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg><span>${l}</span></button>`).join('');
 }
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){go(b.dataset.v)}});
 function go(v){view=v;query='';try{location.hash=v}catch(e){}render();window.scrollTo(0,0)}
@@ -1391,6 +1404,103 @@ $('#file').addEventListener('change',async e=>{
   }catch{uiAlert('ໄຟລ໌ບໍ່ຖືກຕ້ອງ — ກະລຸນາເລືອກໄຟລ໌ JSON ທີ່ສຳຮອງຈາກແອັບນີ້')}
 });
 /* ===== ພິມໃບສົ່ງ ເຄື່ອງພິມນ້ອຍ (ກະດາດ 58 ມມ, ເນື້ອທີ່ພິມ 48 ມມ) ===== */
+
+/* ===== ຕົ້ນທຶນການສົ່ງສິນຄ້າ (ດຶງລາຄາຈາກລາຍການຂອງແຫ້ງ) ===== */
+function delCost(r){
+  const p=parseFloat(state.seasonPct)||0,tot=delCalc.kg(r),chG=tot/(1+p/100),seG=tot-chG,L=[];
+  const add=(n,q,u,pr)=>{if(q>0)L.push({n,q,u,p:pr,a:q*pr,miss:!(pr>0)})};
+  add('ເນື້ອໄກ່',chG/1000,'kg',nz(state.chickPrice));
+  seasonItems().forEach(it=>add(it.name,seG*nz(it.spShare)/100/nz(it.gper),it.unit||'Unit',nz(it.price)));
+  const bg=bagItem(),bx=boxItem();
+  if(bg)add(bg.name,delCalc.bags(r),bg.unit||'ຖົງ',nz(bg.price));
+  if(bx)add(bx.name,nz(r.ctn),bx.unit||'ກ່ອງ',nz(bx.price));
+  add('Bulgogi patty',nz(r.pt),'ຊິ້ນ',nz(state.ptPrice));
+  return {lines:L,total:L.reduce((a,l)=>a+l.a,0),miss:L.filter(l=>l.miss).map(l=>l.n),kg:tot/1000};
+}
+function costLive(c){
+  const d=delCost(c);if(!d.lines.length)return '<span style="color:var(--muted)">— ໃສ່ນ້ຳໜັກກ່ອນ —</span>';
+  return '<b>'+fmtN(Math.round(d.total))+' ກີບ</b>'+(d.kg>0?' · '+fmtN(Math.round(d.total/d.kg))+' ກີບ/kg':'')+'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+d.lines.map(l=>esc(l.n)+' '+fmtN(Math.round(l.q*100)/100)+' × '+fmtN(l.p)).join(' + ')+'</div>'+(d.miss.length?'<div style="font-size:12px;color:var(--bad)">⚠ ຍັງບໍ່ມີລາຄາ: '+d.miss.map(esc).join(', ')+'</div>':'');
+}
+function setLogo(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,360/im.width,200/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);state.logo=c.toDataURL('image/png');save();render();toast('ບັນທຶກໂລໂກ້ແລ້ວ ✓')};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(f);
+}
+function costPanel(){
+  const miss=[];if(!(nz(state.chickPrice)>0))miss.push('ເນື້ອໄກ່');
+  seasonItems().forEach(i=>{if(!(nz(i.price)>0))miss.push(i.name)});
+  const bg=bagItem(),bx=boxItem();if(bg&&!(nz(bg.price)>0))miss.push(bg.name);if(bx&&!(nz(bx.price)>0))miss.push(bx.name);
+  return `<details class="card" style="margin-bottom:12px;padding:8px 14px"><summary style="cursor:pointer;font-weight:600">💰 ຕົ້ນທຶນການສົ່ງ + ໂລໂກ້ໃບສົ່ງ ${miss.length?'<span class="badge warn">ຍັງຂາດລາຄາ '+miss.length+'</span>':'<span class="badge">ພ້ອມ</span>'}</summary>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:14px">
+      <label>ລາຄາເນື້ອໄກ່ <input value="${esc(state.chickPrice)}" inputmode="decimal" style="width:100px" onchange="setPrn('chickPrice',this.value.trim())"> ກີບ/kg</label>
+      <label>ລາຄາ Bulgogi <input value="${esc(state.ptPrice)}" inputmode="decimal" style="width:90px" onchange="setPrn('ptPrice',this.value.trim())"> ກີບ/ຊິ້ນ</label>
+      <label><input type="checkbox" ${state.invCost!=='0'?'checked':''} onchange="setPrn('invCost',this.checked?'1':'0')"> ສະແດງຕົ້ນທຶນໃນຮູບໃບສົ່ງ</label>
+      <label>🖼 ໂລໂກ້ <input type="file" accept="image/*" onchange="setLogo(this)">${state.logo?` <img src="${state.logo}" style="height:30px;vertical-align:middle;border:1px solid var(--line);border-radius:6px"> <button class="btn" onclick="setPrn('logo','')">ລຶບ</button>`:''}</label>
+    </div>
+    <div style="margin-top:6px;font-size:12px;color:var(--muted)">ຕົ້ນທຶນ = ເນື້ອໄກ່(kg) × ລາຄາ + ເຄື່ອງປຸງໝັກ (ຕາມ % ແລະ ສັດສ່ວນ) + ຖົງພລາສຕິກ + ກ່ອງ + Bulgogi. ລາຄາຂອງແຫ້ງໃສ່ທີ່ໜ້າ "ລາຍການຂອງແຫ້ງ" ຊ່ອງ 💰 ລາຄາຕໍ່ 1 Unit.${miss.length?'<br><span style="color:var(--bad)">⚠ ຍັງບໍ່ມີລາຄາ: '+miss.map(esc).join(', ')+'</span>':''}</div></details>`;
+}
+
+async function invCanvas(sec,id){
+  const r=state[sec].find(x=>x.id===id);if(!r)return null;
+  const bname=(state.branches.find(b=>b.id===sec)||{}).name||'';
+  const pb=state.prod.find(x=>x.id===r.batch);
+  const idx=state[sec].filter(x=>(x.date||'')<(r.date||'')||((x.date||'')===(r.date||'')&&state[sec].indexOf(x)<=state[sec].indexOf(r))).length;
+  const no='DN-'+String(r.date||'').replace(/-/g,'')+'-'+String(idx).padStart(2,'0');
+  const W=900,P=48,F='"Noto Sans Lao","Phetsarath OT","Leelawadee UI","Lao Sangam MN",system-ui,sans-serif',AC='#8a3b12',MU='#6b6b6b',LN='#d8d2c8';
+  const cv=document.createElement('canvas');cv.width=W;cv.height=3400;const x=cv.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,3400);x.textBaseline='top';
+  const T=(t,px,py,sz,o={})=>{x.font=(o.b?'700 ':'')+sz+'px '+F;x.fillStyle=o.c||'#111';x.textAlign=o.a||'left';x.fillText(String(t),px,py)};
+  const HR=(py,c)=>{x.strokeStyle=c||LN;x.lineWidth=2;x.beginPath();x.moveTo(P,py);x.lineTo(W-P,py);x.stroke()};
+  x.fillStyle=AC;x.fillRect(0,0,W,14);
+  let y=44;
+  /* ໂລໂກ້ */
+  let logoImg=null;
+  if(state.logo){logoImg=await new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=state.logo})}
+  if(logoImg){const k=Math.min(300/logoImg.width,110/logoImg.height);x.drawImage(logoImg,P,y,logoImg.width*k,logoImg.height*k)}
+  else{x.fillStyle=AC;x.beginPath();x.arc(P+36,y+40,36,0,Math.PI*2);x.fill();T('M',P+36,y+14,50,{b:1,c:'#fff',a:'center'});
+    T("Mom's Touch",P+88,y+8,40,{b:1,c:AC});T(state.rptTitle||'ໂຮງໝັກໄກ່',P+90,y+58,20,{c:MU})}
+  T('INVOICE',W-P,y,44,{b:1,a:'right',c:AC});T('ໃບສົ່ງສິນຄ້າ',W-P,y+52,24,{a:'right'});T('ເລກທີ່ '+no,W-P,y+86,20,{a:'right',c:MU});
+  y+=134;HR(y,AC);y+=22;
+  T('ສົ່ງໄປ',P,y,18,{c:MU});T(bname,P,y+24,34,{b:1});
+  const info=[['ວັນທີ່ສົ່ງ',fmtDate(r.date)],['ຜະລິດ',fmtDate(r.made)],['ໝົດອາຍຸ',fmtDate(r.expiry)]];if(pb)info.push(['ງວດ',fmtDate(pb.batch).slice(0,5)]);
+  info.forEach((a,i)=>{T(a[0],W-P-300,y+i*28,20,{c:MU});T(a[1],W-P,y+i*28,20,{b:1,a:'right'})});
+  y+=Math.max(80,info.length*28)+22;
+  /* ຕາຕະລາງສິນຄ້າ */
+  const kg=g=>fmtN(Math.round(g)/1000);
+  const slots=(w,n)=>{const a=[];for(let i=1;i<=n;i++){const v=r[w+i];if(v!==''&&v!=null){const e=ev(v);if(!isNaN(e)&&e>0)a.push(kg(e))}}return a.join(' + ')};
+  const items=[['Thigh patty',nz(r.tk),nz(r.tb),slots('t',5)],['Big Boneless',nz(r.bk),nz(r.bb),slots('b',5)],['JR VX',nz(r.jk),nz(r.jb),slots('j',3)]].filter(a=>a[1]>0||a[2]>0);
+  x.fillStyle='#f4efe8';x.fillRect(P,y,W-2*P,44);
+  T('ລາຍການ',P+14,y+9,21,{b:1});T('ນ້ຳໜັກ (kg)',W-P-170,y+9,21,{b:1,a:'right'});T('ຖົງ',W-P-14,y+9,21,{b:1,a:'right'});y+=44;
+  items.forEach(a=>{T(a[0],P+14,y+10,24,{b:1});T(kg(a[1]),W-P-170,y+10,24,{a:'right'});T(fmtN(a[2]),W-P-14,y+10,24,{a:'right'});
+    let h=48;if(a[3]){const sub='ລັງ: '+a[3];x.font='18px '+F;let t=sub;while(x.measureText(t).width>W-2*P-240&&t.length>10)t=t.slice(0,-2);if(t!==sub)t+='…';T(t,P+14,y+42,18,{c:MU});h=76}
+    y+=h;HR(y)});
+  if(!items.length){T('—',P+14,y+10,24);y+=48;HR(y)}
+  y+=14;
+  const tot=(a,b,big)=>{T(a,W-P-(big?380:260),y,big?26:21,{b:big,c:big?AC:'#111'});T(b,W-P,y,big?26:21,{b:big,a:'right',c:big?AC:'#111'});y+=big?40:32};
+  if(nz(r.ctn)>0)tot('ຈຳນວນກ່ອງ',fmtN(nz(r.ctn)));
+  if(nz(r.pt)>0)tot('Bulgogi patty',fmtN(nz(r.pt))+' ຊິ້ນ');
+  tot('ລວມຖົງ',fmtN(delCalc.bags(r))+' ຖົງ',1);tot('ນ້ຳໜັກລວມ',kg(delCalc.kg(r))+' kg',1);
+  /* ຕົ້ນທຶນ */
+  const d=delCost(r);
+  if(state.invCost!=='0'&&d.lines.length){
+    y+=14;x.fillStyle='#f4efe8';x.fillRect(P,y,W-2*P,44);
+    T('ຕົ້ນທຶນການສົ່ງ',P+14,y+9,21,{b:1});T('ຈຳນວນ',W-P-330,y+9,19,{a:'right',b:1});T('ລາຄາ',W-P-190,y+9,19,{a:'right',b:1});T('ລວມ (ກີບ)',W-P-14,y+9,19,{a:'right',b:1});y+=44;
+    d.lines.forEach(l=>{x.font='20px '+F;let n=l.n;while(x.measureText(n).width>W-2*P-420&&n.length>6)n=n.slice(0,-2);if(n!==l.n)n+='…';
+      T(n,P+14,y+9,20,{c:l.miss?'#b00020':'#111'});T(fmtN(Math.round(l.q*100)/100)+' '+l.u,W-P-330,y+9,19,{a:'right',c:MU});
+      T(l.miss?'ບໍ່ມີລາຄາ':fmtN(l.p),W-P-190,y+9,19,{a:'right',c:l.miss?'#b00020':MU});T(fmtN(Math.round(l.a)),W-P-14,y+9,20,{a:'right'});y+=40;HR(y)});
+    y+=12;tot('ຕົ້ນທຶນລວມ',fmtN(Math.round(d.total))+' ກີບ',1);
+    if(d.kg>0)tot('ຕົ້ນທຶນ / kg',fmtN(Math.round(d.total/d.kg))+' ກີບ');
+    if(d.miss.length){T('⚠ ຍັງບໍ່ມີລາຄາ: '+d.miss.join(', '),P,y,17,{c:'#b00020'});y+=28}
+  }
+  /* ລາຍເຊັນ — ຈັດຢູ່ທ້າຍໜ້າ ກະດາດ A5 ແນວຕັ້ງ (ອັດຕາສ່ວນ 1:1.414) */
+  const H=Math.max(Math.round(W*1.4142),y+250),sy=H-170;
+  x.strokeStyle='#111';x.lineWidth=2;
+  [[P,W/2-30],[W/2+30,W-P]].forEach(([a,b],i)=>{x.beginPath();x.moveTo(a,sy);x.lineTo(b,sy);x.stroke();T(i?'ຜູ້ຮັບ':'ຜູ້ສົ່ງ',(a+b)/2,sy+8,20,{a:'center'})});
+  HR(H-92);T("ຂອບໃຈ · Mom's Touch",W/2,H-70,18,{a:'center',c:MU});
+  const out=document.createElement('canvas');out.width=W;out.height=H;const ox=out.getContext('2d');
+  ox.fillStyle='#fff';ox.fillRect(0,0,W,H);ox.drawImage(cv,0,0,W,H,0,0,W,H);
+  ox.fillStyle=AC;ox.fillRect(0,0,W,14);ox.fillRect(0,H-14,W,14);ox.strokeStyle=LN;ox.lineWidth=3;ox.strokeRect(10,10,W-20,H-20);
+  return out;
+}
 function slipHtml(sec,id){
   const r=state[sec].find(x=>x.id===id);if(!r)return '';
   const bname=(state.branches.find(b=>b.id===sec)||{}).name||'';
@@ -1517,7 +1627,7 @@ async function btPrintSlip(sec,id){
   catch(e){btChar=null;await uiAlert('ສົ່ງພິມບໍ່ສຳເລັດ: '+(e&&e.message||e)+'\nລອງກົດ 🔵 ອີກຄັ້ງ ຫຼື ກວດວ່າເຄື່ອງພິມເປີດຢູ່ ແລະ ຢູ່ໃກ້ໆ')}
 }
 async function pngSlip(sec,id){
-  const cv=slipCanvas(sec,id);if(!cv){toast('ບໍ່ພົບລາຍການ');return}
+  const cv=await invCanvas(sec,id);if(!cv){toast('ບໍ່ພົບລາຍການ');return}
   const name='slip-'+sec+'-'+id+'.png';
   const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
   try{const f=new File([blob],name,{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'ໃບສົ່ງສິນຄ້າ'});return}}catch(e){if(e&&e.name==='AbortError')return}
