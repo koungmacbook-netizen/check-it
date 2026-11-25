@@ -3,23 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ຕິດຕາມການຜະລິດໄກ່</title>
+<title>Mom's Touch · ຕິດຕາມການຜະລິດໄກ່</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ffcf1a'/%3E%3Ctext x='32' y='45' font-family='Arial' font-weight='900' font-size='38' text-anchor='middle' fill='%23141414'%3EM%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#ffcf1a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&display=swap">
 <style>
 :root{
-  --bg:#f6f4ef; --surface:#ffffff; --surface2:#f1eee7; --ink:#1d2a2c; --muted:#5f6b6d; --line:#e3ded3;
-  --accent:#0f6b6b; --accent-ink:#ffffff; --accent-soft:#dff0ee;
-  --warn:#b45309; --warn-soft:#fdecd2; --bad:#b42318; --bad-soft:#fde4e1; --ok:#1d7a46; --ok-soft:#dcf2e4;
-  --c1:#0f6b6b; --c2:#d97706; --c3:#4f5fa8;
-  --shadow:0 1px 2px rgba(30,40,40,.06),0 4px 14px rgba(30,40,40,.05);
+  --bg:#fffdf4; --surface:#ffffff; --surface2:#faf6e3; --ink:#141414; --muted:#6b6650; --line:#ece4bd;
+  --accent:#141414; --accent-ink:#ffcf1a; --accent-soft:#ffe97a;
+  --warn:#9a5b00; --warn-soft:#fff0c2; --bad:#b42318; --bad-soft:#fde4e1; --ok:#1d7a46; --ok-soft:#dcf2e4;
+  --c1:#f2b705; --c2:#141414; --c3:#8c8668;
+  --brand:#ffcf1a;
+  --shadow:0 1px 2px rgba(30,25,0,.06),0 4px 14px rgba(30,25,0,.06);
   --radius:14px;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#121819; --surface:#1a2223; --surface2:#222c2d; --ink:#e8eeee; --muted:#9aa8a9; --line:#2d3a3b;
-    --accent:#4fc1b8; --accent-ink:#062826; --accent-soft:#17403e;
-    --warn:#f5b15a; --warn-soft:#41300f; --bad:#ff8a7d; --bad-soft:#431c18; --ok:#6fd49a; --ok-soft:#173a26;
-    --c1:#4fc1b8; --c2:#f0a43a; --c3:#8e9bf0; --shadow:none}
+  :root{--bg:#0e0e0c; --surface:#181816; --surface2:#222220; --ink:#f4f1e4; --muted:#a8a38c; --line:#34332b;
+    --accent:#ffcf1a; --accent-ink:#141414; --accent-soft:#3d3500;
+    --warn:#ffcf1a; --warn-soft:#3d3500; --bad:#ff8a7d; --bad-soft:#431c18; --ok:#6fd49a; --ok-soft:#173a26;
+    --c1:#ffcf1a; --c2:#f4f1e4; --c3:#8c8668; --brand:#ffcf1a; --shadow:none}
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -37,7 +40,10 @@ button,input,select{font:inherit;color:inherit}
 .brand small{color:var(--muted);font-size:12px}
 .nav button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border:0;background:none;border-radius:10px;cursor:pointer;text-align:left;color:var(--muted);font-weight:500}
 .nav button:hover{background:var(--surface2);color:var(--ink)}
-.nav button[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav button[aria-current=page]{background:var(--accent-soft);color:var(--ink);font-weight:700;box-shadow:inset 3px 0 0 var(--brand)}
+.brand .logo{background:var(--brand)!important;color:#141414!important;overflow:hidden}
+.brand .logo img{width:100%;height:100%;object-fit:contain;display:block}
+.verchip{display:inline-block;background:var(--brand);color:#141414;border-radius:99px;font-size:11px;font-weight:700;padding:0 8px;margin-left:6px;vertical-align:middle}
 .nav svg{width:20px;height:20px;flex:none}
 [hidden]{display:none!important}
 .navgrp{font-size:11px;color:var(--muted);padding:10px 12px 2px;letter-spacing:.05em}
@@ -162,8 +168,8 @@ dialog h3{margin:0 0 16px;font-size:18px}
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg></div>
-      <div><b>ຕິດຕາມການຜະລິດໄກ່</b><small>ລະລາຍ · ຜະລິດ · ສົ່ງ · ສະຕ໋ອກ</small></div>
+      <div class="logo" id="brandLogo"></div>
+      <div><b>Mom's Touch <span class="verchip" id="verChip">v31</span></b><small>ຕິດຕາມການຜະລິດໄກ່ · ລະລາຍ · ຜະລິດ · ສົ່ງ</small></div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="spacer"></div>
@@ -184,6 +190,8 @@ dialog h3{margin:0 0 16px;font-size:18px}
 <div class="toast" id="toast" role="status"></div>
 
 <script>
+/* ແຈ້ງ error ເທິງໜ້າຈໍ ແທນທີ່ຈະເປັນໜ້າເປົ່າ (ຊ່ວຍກວດສອບ) */
+window.addEventListener('error',function(e){try{var d=document.getElementById('errBanner');if(!d){d=document.createElement('div');d.id='errBanner';d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b42318;color:#fff;padding:10px 14px;font:13px/1.4 system-ui,sans-serif;white-space:pre-wrap';document.body.appendChild(d)}d.textContent='⚠ ມີ error: '+(e.message||e)+(e.lineno?' (ແຖວ '+e.lineno+')':'')+'\nກະລຸນາຖ່າຍຮູບສົ່ງໃຫ້ຜູ້ພັດທະນາ — ຂໍ້ມູນຂອງທ່ານຍັງຢູ່ ບໍ່ຫາຍ'}catch(x){}});
 /* ============ helpers ============ */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -264,7 +272,7 @@ function load(){
 }
 function fileToImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const S=200,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);const k=Math.min(S/im.width,S/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);cb(c.toDataURL('image/jpeg',.8))};im.onerror=()=>toast('ອ່ານຮູບບໍ່ໄດ້');im.src=fr.result};fr.readAsDataURL(file)}
 function stampVer(){const v=document.getElementById('verStamp');if(!v)return;const t=state.savedAt?new Date(state.savedAt):null;
-  v.textContent='ເວີຊັນ 24/11/2026 · v29 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
+  v.textContent='ເວີຊັນ 25/11/2026 · v31 | ຂໍ້ມູນ: ຂອງແຫ້ງ '+state.dry.length+' ລາຍການ'+(t?' · ບັນທຶກລ່າສຸດ '+fmtDate(state.savedAt.slice(0,10))+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'):'')}
 function sortAll(){
   if(typeof SECTIONS==='undefined'||typeof sectionsReady==='undefined'||!sectionsReady)return;
   Object.keys(SECTIONS).forEach(k=>{
@@ -374,7 +382,8 @@ function numTail(x){const m=String(x==null?'':x).match(/(\d+)\s*$/);return m?par
 function nextLot(){let m=parseInt(state.lotLast)||0;(state.prod||[]).forEach(r=>{m=Math.max(m,numTail(r.lot))});return String(m+1)}
 function nextInv(){let m=parseInt(state.invLast)||0;(state.branches||[]).forEach(b=>(state[b.id]||[]).forEach(r=>{m=Math.max(m,numTail(r.inv))}));return 'INV-'+String(m+1).padStart(4,'0')}
 function bigRaw(v){const t=slotSum(v,'bw',5);return t===''?0:parseFloat(t)}
-const PCT=()=>parseFloat(state.seasonPct)||0,BPCT=()=>parseFloat(state.bseasonPct)||0;
+function PCT(){return parseFloat(state.seasonPct)||0}
+function BPCT(){return parseFloat(state.bseasonPct)||0}
 /* ເຄື່ອງປຸງທີ່ຄວນໃຊ້: ສ່ວນ Big = BPCT% (1.3) · ສ່ວນທີ່ເຫຼືອ = PCT% (1.5) */
 function seaCalc(v){return nz(v.actual)*PCT()/100}   /* ເຄື່ອງປຸງ Thigh = 1.5% ຂອງນ້ຳໜັກເນື້ອໄກ່ທີ່ຊັ່ງ */
 function bseaOf(v){const t=ev(v.bseason);return (v.bseason!==''&&v.bseason!=null&&t!=null&&!isNaN(t))?t:bigRaw(v)*BPCT()/100}
@@ -1209,7 +1218,10 @@ function mobileTools(){
   return `<button class="btn" data-m="addbranch">+ ສາຂາ</button><button class="btn" data-m="backup">ສຳຮອງຂໍ້ມູນ</button><button class="btn" data-m="restore">ກູ້ຄືນ</button><button class="btn" data-m="print">ພິມ</button>`;
 }
 
-function render(){
+const LOGO_SVG='<svg viewBox="0 0 64 64" width="38" height="38"><rect width="64" height="64" fill="#ffcf1a"/><path d="M32 12c-2-3-7-3-8 1-1 3 3 6 8 10 5-4 9-7 8-10-1-4-6-4-8-1z" fill="#141414"/><text x="32" y="55" font-family="Arial,sans-serif" font-weight="900" font-size="34" text-anchor="middle" fill="#141414">M</text></svg>';
+function brandLogo(){const e=document.getElementById('brandLogo');if(e)e.innerHTML=state.logo?'<img alt="Mom\'s Touch" src="'+state.logo+'">':LOGO_SVG;const c=document.getElementById('verChip');if(c)c.textContent='v'+APPV}
+const APPV=31;
+function render(){brandLogo();
   renderNav();
   syncDryCatalog();sortAll();stampVer();
   const m=$('#main');
@@ -1511,21 +1523,21 @@ async function invCanvas(sec,id){
   const pb=state.prod.find(x=>x.id===r.batch);
   const idx=state[sec].filter(x=>(x.date||'')<(r.date||'')||((x.date||'')===(r.date||'')&&state[sec].indexOf(x)<=state[sec].indexOf(r))).length;
   const no=r.inv||('DN-'+String(r.date||'').replace(/-/g,'')+'-'+String(idx).padStart(2,'0'));
-  const W=900,P=48,F='"Noto Sans Lao","Phetsarath OT","Leelawadee UI","Lao Sangam MN",system-ui,sans-serif',AC='#8a3b12',MU='#6b6b6b',LN='#d8d2c8';
+  const W=900,P=48,F='"Noto Sans Lao","Phetsarath OT","Leelawadee UI","Lao Sangam MN",system-ui,sans-serif',AC='#141414',MU='#6b6b6b',LN='#d8d2c8';
   const cv=document.createElement('canvas');cv.width=W;cv.height=3400;const x=cv.getContext('2d');
   x.fillStyle='#fff';x.fillRect(0,0,W,3400);x.textBaseline='top';
   const T=(t,px,py,sz,o={})=>{x.font=(o.b?'700 ':'')+sz+'px '+F;x.fillStyle=o.c||'#111';x.textAlign=o.a||'left';x.fillText(String(t),px,py)};
   const HR=(py,c)=>{x.strokeStyle=c||LN;x.lineWidth=2;x.beginPath();x.moveTo(P,py);x.lineTo(W-P,py);x.stroke()};
-  x.fillStyle=AC;x.fillRect(0,0,W,14);
+  x.fillStyle='#ffcf1a';x.fillRect(0,0,W,14);
   let y=44;
   /* ໂລໂກ້ */
   let logoImg=null;
   if(state.logo){logoImg=await new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=state.logo})}
   if(logoImg){const k=Math.min(300/logoImg.width,110/logoImg.height);x.drawImage(logoImg,P,y,logoImg.width*k,logoImg.height*k)}
-  else{x.fillStyle=AC;x.beginPath();x.arc(P+36,y+40,36,0,Math.PI*2);x.fill();T('M',P+36,y+14,50,{b:1,c:'#fff',a:'center'});
+  else{x.fillStyle='#ffcf1a';x.beginPath();x.arc(P+36,y+40,36,0,Math.PI*2);x.fill();T('M',P+36,y+14,50,{b:1,c:'#141414',a:'center'});
     T("Mom's Touch",P+88,y+8,40,{b:1,c:AC});T(state.rptTitle||'ໂຮງໝັກໄກ່',P+90,y+58,20,{c:MU})}
   T('INVOICE',W-P,y,44,{b:1,a:'right',c:AC});T('ໃບສົ່ງສິນຄ້າ',W-P,y+52,24,{a:'right'});T('ເລກທີ່ '+no,W-P,y+86,20,{a:'right',c:MU});
-  y+=134;HR(y,AC);y+=22;
+  y+=134;x.fillStyle='#ffcf1a';x.fillRect(P,y-1,W-2*P,4);y+=22;
   T('ສົ່ງໄປ',P,y,18,{c:MU});T(bname,P,y+24,34,{b:1});
   const info=[['ວັນທີ່ສົ່ງ',fmtDate(r.date)],['ຜະລິດ',fmtDate(r.made)],['ໝົດອາຍຸ',fmtDate(r.expiry)]];if(pb)info.push(['ງວດ',fmtDate(pb.batch).slice(0,5)]);
   info.forEach((a,i)=>{T(a[0],W-P-300,y+i*28,20,{c:MU});T(a[1],W-P,y+i*28,20,{b:1,a:'right'})});
@@ -1534,7 +1546,7 @@ async function invCanvas(sec,id){
   const kg=g=>fmtN(Math.round(g)/1000);
   const slots=(w,n)=>{const a=[];for(let i=1;i<=n;i++){const v=r[w+i];if(v!==''&&v!=null){const e=ev(v);if(!isNaN(e)&&e>0)a.push(kg(e))}}return a.join(' + ')};
   const items=[['Thigh patty',nz(r.tk),nz(r.tb),slots('t',5)],['Big Boneless',nz(r.bk),nz(r.bb),slots('b',5)],['JR VX',nz(r.jk),nz(r.jb),slots('j',3)]].filter(a=>a[1]>0||a[2]>0);
-  x.fillStyle='#f4efe8';x.fillRect(P,y,W-2*P,44);
+  x.fillStyle='#fff3b8';x.fillRect(P,y,W-2*P,44);
   T('ລາຍການ',P+14,y+9,21,{b:1});T('ນ້ຳໜັກ (kg)',W-P-170,y+9,21,{b:1,a:'right'});T('ຖົງ',W-P-14,y+9,21,{b:1,a:'right'});y+=44;
   items.forEach(a=>{T(a[0],P+14,y+10,24,{b:1});T(kg(a[1]),W-P-170,y+10,24,{a:'right'});T(fmtN(a[2]),W-P-14,y+10,24,{a:'right'});
     let h=48;if(a[3]){const sub='ລັງ: '+a[3];x.font='18px '+F;let t=sub;while(x.measureText(t).width>W-2*P-240&&t.length>10)t=t.slice(0,-2);if(t!==sub)t+='…';T(t,P+14,y+42,18,{c:MU});h=76}
@@ -1548,7 +1560,7 @@ async function invCanvas(sec,id){
   /* ຕົ້ນທຶນ */
   const d=delCost(r);
   if(state.invCost!=='0'&&d.lines.length){
-    y+=14;x.fillStyle='#f4efe8';x.fillRect(P,y,W-2*P,44);
+    y+=14;x.fillStyle='#fff3b8';x.fillRect(P,y,W-2*P,44);
     T('ຕົ້ນທຶນການສົ່ງ',P+14,y+9,21,{b:1});T('ຈຳນວນ',W-P-330,y+9,19,{a:'right',b:1});T('ລາຄາ',W-P-190,y+9,19,{a:'right',b:1});T('ລວມ (ກີບ)',W-P-14,y+9,19,{a:'right',b:1});y+=44;
     d.lines.forEach(l=>{x.font='20px '+F;let n=l.n;while(x.measureText(n).width>W-2*P-420&&n.length>6)n=n.slice(0,-2);if(n!==l.n)n+='…';
       T(n,P+14,y+9,20,{c:l.miss?'#b00020':'#111'});T(fmtN(Math.round(l.q*100)/100)+' '+l.u,W-P-330,y+9,19,{a:'right',c:MU});
@@ -1564,7 +1576,7 @@ async function invCanvas(sec,id){
   HR(H-92);T("ຂອບໃຈ · Mom's Touch",W/2,H-70,18,{a:'center',c:MU});
   const out=document.createElement('canvas');out.width=W;out.height=H;const ox=out.getContext('2d');
   ox.fillStyle='#fff';ox.fillRect(0,0,W,H);ox.drawImage(cv,0,0,W,H,0,0,W,H);
-  ox.fillStyle=AC;ox.fillRect(0,0,W,14);ox.fillRect(0,H-14,W,14);ox.strokeStyle=LN;ox.lineWidth=3;ox.strokeRect(10,10,W-20,H-20);
+  ox.fillStyle='#ffcf1a';ox.fillRect(0,0,W,14);ox.fillRect(0,H-14,W,14);ox.strokeStyle=LN;ox.lineWidth=3;ox.strokeRect(10,10,W-20,H-20);
   return out;
 }
 function slipHtml(sec,id){
